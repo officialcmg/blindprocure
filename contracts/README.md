@@ -62,10 +62,14 @@ env HOME=/Users/chrismg/Developer/bounties/zama/.home npm test
 Set Hardhat vars before Sepolia deployment:
 
 ```bash
+env HOME=/Users/chrismg/Developer/bounties/zama/.home npx hardhat vars set PRIVATE_KEY
+env HOME=/Users/chrismg/Developer/bounties/zama/.home npx hardhat vars set SEPOLIA_RPC_URL
 env HOME=/Users/chrismg/Developer/bounties/zama/.home npx hardhat vars set MNEMONIC
 env HOME=/Users/chrismg/Developer/bounties/zama/.home npx hardhat vars set INFURA_API_KEY
 env HOME=/Users/chrismg/Developer/bounties/zama/.home npx hardhat vars set ETHERSCAN_API_KEY
 ```
+
+`PRIVATE_KEY` and `SEPOLIA_RPC_URL` can also be provided as environment variables. Never commit private keys or `.env` files.
 
 Deploy:
 

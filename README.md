@@ -1,0 +1,76 @@
+# BlindProcure
+
+BlindProcure is a Zama FHEVM procurement demo for confidential reverse auctions.
+
+Problem statement:
+
+> A smart contract should be able to choose the cheapest compliant supplier without exposing the losing bids.
+
+Buyers create public tenders. Suppliers submit encrypted bid prices. The contract compares encrypted bids, selects the lowest valid price under the public budget cap, publicly records only the winning supplier, and lets only the buyer or an approved auditor decrypt the winning price.
+
+## Architecture
+
+- `contracts/`: Hardhat + Zama FHEVM contract and tests.
+- `web/`: Next.js demo app for the buyer/supplier/auditor workflow.
+
+No settlement is implemented. The demo focuses only on confidential bid selection and selective decryption.
+
+## Privacy Model
+
+Public:
+
+- buyer and supplier addresses,
+- tender title and spec hash,
+- deadline and public budget cap,
+- bid count and submission timing,
+- winning supplier after proof-verified public winner reveal.
+
+Confidential:
+
+- supplier bid prices,
+- winning price unless decrypted by the buyer or an approved auditor.
+
+## Local Verification
+
+```bash
+env HOME=/Users/chrismg/Developer/bounties/zama/.home npm run compile --workspace contracts
+env HOME=/Users/chrismg/Developer/bounties/zama/.home npm run test --workspace contracts
+npm run lint --workspace web
+npm run build --workspace web
+```
+
+## Sepolia Deployment
+
+Create a local `.env` from `.env.example` and fill values locally. Do not commit `.env`.
+
+```bash
+cd contracts
+env HOME=/Users/chrismg/Developer/bounties/zama/.home PRIVATE_KEY=$PRIVATE_KEY SEPOLIA_RPC_URL=$SEPOLIA_RPC_URL npm run deploy:sepolia
+```
+
+After deployment, set `NEXT_PUBLIC_BLINDPROCURE_ADDRESS` in `web/.env.local` and in Vercel.
+
+## Demo Flow
+
+1. Buyer creates `Office laptops Q3` with budget cap `1500`.
+2. Buyer approves three supplier wallets.
+3. Supplier A submits encrypted bid `1200`.
+4. Supplier B submits encrypted bid `980`.
+5. Supplier C submits encrypted bid `1100`.
+6. Buyer finalizes encrypted winner selection after deadline.
+7. App publicly decrypts only the winning bid ID and records the winning supplier.
+8. Buyer decrypts the winning price, `980`.
+9. Buyer grants auditor access.
+10. Auditor decrypts the same winning price.
+
+Expected result: Supplier B wins, while losing bid prices stay redacted.
+
+## Demo-Readiness Checklist
+
+- Contract tests pass.
+- Frontend lint and build pass.
+- Sepolia contract bytecode exists.
+- `cast` can read `nextTenderId`, tender metadata, bid count, finalization status, and winning supplier.
+- Local app loads `/`, `/demo`, `/tenders`, `/tenders/new`, and `/tenders/[id]`.
+- Hosted Vercel app points to the Sepolia contract address.
+- Browser dry run completes the full demo path without console errors.
