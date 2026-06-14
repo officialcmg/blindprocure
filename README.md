@@ -41,6 +41,12 @@ npm run build --workspace web
 
 ## Sepolia Deployment
 
+Current deployed contract:
+
+- BlindProcure: `0x3801C32Fc2b61d9De992643825B80809Ac439443`
+- Deployment transaction: `0xf3fc72477e0639396216233c61b7025e76ceee985cd684fe33572141f3d178ad`
+- Network: Sepolia
+
 Create a local `.env` from `.env.example` and fill values locally. Do not commit `.env`.
 
 ```bash
