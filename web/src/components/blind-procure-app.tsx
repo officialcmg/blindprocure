@@ -461,9 +461,17 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
   const { switchChain } = useSwitchChain();
   const { signTypedDataAsync } = useSignTypedData();
   const { writeContractAsync } = useWriteContract();
+  const nextTenderIdRead = useReadContract({
+    address: blindProcureAddress,
+    abi: blindProcureAbi,
+    functionName: "nextTenderId",
+    query: { enabled: isContractConfigured, refetchInterval: 8000 },
+  });
   const tenderRead = useTender(tenderId);
   const tender = tenderRead.data as TenderTuple | undefined;
-  const bidCount = tender ? Number(tender[6]) : 0;
+  const existsByCounter = nextTenderIdRead.data ? tenderId > 0n && tenderId < nextTenderIdRead.data : undefined;
+  const tenderExists = Boolean(existsByCounter && tender && tender[0] !== zeroAddress);
+  const bidCount = tenderExists && tender ? Number(tender[6]) : 0;
   const suppliers = useTenderSuppliers(tenderId, bidCount);
   const [supplierInput, setSupplierInput] = useState("");
   const [bidPrice, setBidPrice] = useState("");
@@ -472,24 +480,24 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
   const [publicWinnerId, setPublicWinnerId] = useState<string | null>(null);
   const [status, setStatus] = useState<TxStatus | null>(null);
 
-  const isBuyer = Boolean(address && tender && address.toLowerCase() === tender[0].toLowerCase());
-  const isClosed = tender ? nowMs >= Number(tender[3]) * 1000 : false;
-  const winner = tender?.[9];
-  const winnerRecorded = tender?.[8] || false;
+  const isBuyer = Boolean(address && tenderExists && tender && address.toLowerCase() === tender[0].toLowerCase());
+  const isClosed = tenderExists && tender ? nowMs >= Number(tender[3]) * 1000 : false;
+  const winner = tenderExists ? tender?.[9] : undefined;
+  const winnerRecorded = (tenderExists && tender?.[8]) || false;
 
   const currentUserApproval = useReadContract({
     address: blindProcureAddress,
     abi: blindProcureAbi,
     functionName: "approved",
     args: [tenderId, (address || zeroAddress) as Address],
-    query: { enabled: isContractConfigured && Boolean(address) },
+    query: { enabled: isContractConfigured && tenderExists && Boolean(address) },
   });
   const currentUserBid = useReadContract({
     address: blindProcureAddress,
     abi: blindProcureAbi,
     functionName: "hasBid",
     args: [tenderId, (address || zeroAddress) as Address],
-    query: { enabled: isContractConfigured && Boolean(address) },
+    query: { enabled: isContractConfigured && tenderExists && Boolean(address) },
   });
 
   const submittedSuppliers = useMemo(
@@ -633,9 +641,13 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
     <Shell>
       <section className="py-8">
         {!isContractConfigured && <Notice tone="error">Set `NEXT_PUBLIC_BLINDPROCURE_ADDRESS` before using the live app.</Notice>}
-        {tenderRead.isLoading && <Notice>Loading tender state...</Notice>}
-        {!tenderRead.isLoading && !tender && <Notice tone="error">Tender #{tenderId.toString()} was not found.</Notice>}
-        {tender && (
+        {(nextTenderIdRead.isLoading || (existsByCounter !== false && tenderRead.isLoading)) && (
+          <Notice>Loading tender state...</Notice>
+        )}
+        {!nextTenderIdRead.isLoading && !tenderRead.isLoading && !tenderExists && (
+          <Notice tone="error">Tender #{tenderId.toString()} was not found.</Notice>
+        )}
+        {tenderExists && tender && (
           <div className="grid gap-5">
             <div className="rounded border border-[var(--line)] bg-[var(--panel)] p-5">
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
