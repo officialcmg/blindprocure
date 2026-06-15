@@ -10,6 +10,7 @@
     "compile:contracts": "npm run compile --workspace contracts",
     "dev": "npm run dev --workspace web",
     "test": "npm run test --workspace contracts",
-    "verify": "npm run compile:contracts && npm run test && npm run build"
+    "verify:repo": "node scripts/verify-repo.mjs",
+    "verify": "npm run verify:repo && npm run compile:contracts && npm run test && npm run build"
   }
 }

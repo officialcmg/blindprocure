@@ -33,6 +33,7 @@ Confidential:
 ## Local Verification
 
 ```bash
+npm run verify:repo
 env HOME=/Users/chrismg/Developer/bounties/zama/.home npm run compile --workspace contracts
 env HOME=/Users/chrismg/Developer/bounties/zama/.home npm run test --workspace contracts
 npm run lint --workspace web
