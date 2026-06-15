@@ -22,14 +22,7 @@ FUND_SUPPLIERS=true
 DEMO_DEADLINE_SECONDS=90
 ```
 
-Fill `BUYER_PRIVATE_KEY` locally. Then load both ignored env files in the current shell:
-
-```bash
-set -a
-. web/.env.demo-local
-. web/.env.demo-wallets
-set +a
-```
+Fill `BUYER_PRIVATE_KEY` locally. The seed script automatically loads `web/.env.demo-local` and `web/.env.demo-wallets` when they exist.
 
 ## 3. Seed The Live Demo
 
