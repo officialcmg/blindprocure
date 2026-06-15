@@ -46,6 +46,7 @@ Current deployed contract:
 - BlindProcure: `0x3801C32Fc2b61d9De992643825B80809Ac439443`
 - Deployment transaction: `0xf3fc72477e0639396216233c61b7025e76ceee985cd684fe33572141f3d178ad`
 - Network: Sepolia
+- Hosted demo: `https://blindprocure.vercel.app`
 
 Create a local `.env` from `.env.example` and fill values locally. Do not commit `.env`.
 
@@ -55,6 +56,33 @@ env HOME=/Users/chrismg/Developer/bounties/zama/.home PRIVATE_KEY=$PRIVATE_KEY S
 ```
 
 After deployment, set `NEXT_PUBLIC_BLINDPROCURE_ADDRESS` in `web/.env.local` and in Vercel.
+
+## Sepolia Demo Seeding
+
+Use the seeding script only with local environment variables. Never commit the private keys.
+
+Required local env vars:
+
+- `SEPOLIA_RPC_URL`
+- `BUYER_PRIVATE_KEY`
+- `SUPPLIER_A_PRIVATE_KEY`
+- `SUPPLIER_B_PRIVATE_KEY`
+- `SUPPLIER_C_PRIVATE_KEY`
+
+Optional local env vars:
+
+- `AUDITOR_PRIVATE_KEY`
+- `FUND_SUPPLIERS=true`
+- `DEMO_DEADLINE_SECONDS=90`
+- `BLINDPROCURE_ADDRESS=0x3801C32Fc2b61d9De992643825B80809Ac439443`
+
+Run:
+
+```bash
+npm run seed:demo --workspace web
+```
+
+The script creates `Office laptops Q3`, approves three suppliers, submits three encrypted bids, waits for the deadline, finalizes, publicly records the winning supplier, and decrypts the winning price as the buyer. If `AUDITOR_PRIVATE_KEY` is set, it also grants auditor access and verifies auditor decryption.
 
 ## Demo Flow
 
