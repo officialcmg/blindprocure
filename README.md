@@ -99,6 +99,11 @@ The script creates `Office laptops Q3`, approves three suppliers, submits three 
 
 Expected result: Supplier B wins, while losing bid prices stay redacted.
 
+## Submission Materials
+
+- 3-minute video script: `docs/video-script.md`
+- X thread draft: `docs/x-thread.md`
+
 ## Demo-Readiness Checklist
 
 - Contract tests pass.
