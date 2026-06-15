@@ -61,6 +61,14 @@ After deployment, set `NEXT_PUBLIC_BLINDPROCURE_ADDRESS` in `web/.env.local` and
 
 Use the seeding script only with local environment variables. Never commit the private keys.
 
+Generate local supplier/auditor wallets:
+
+```bash
+npm run demo:wallets --workspace web
+```
+
+This writes private keys to ignored file `web/.env.demo-wallets` and prints only public addresses. Add the buyer private key and RPC URL through your shell or another ignored local env file.
+
 Required local env vars:
 
 - `SEPOLIA_RPC_URL`
@@ -101,6 +109,7 @@ Expected result: Supplier B wins, while losing bid prices stay redacted.
 
 ## Submission Materials
 
+- Final demo runbook: `docs/final-demo-runbook.md`
 - 3-minute video script: `docs/video-script.md`
 - X thread draft: `docs/x-thread.md`
 
