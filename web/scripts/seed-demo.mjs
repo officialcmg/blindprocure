@@ -1,5 +1,6 @@
 import { RelayerNode, SepoliaConfig } from "@zama-fhe/sdk/node";
 import { existsSync, readFileSync } from "node:fs";
+import { stdin as input, stdout as output } from "node:process";
 import {
   createPublicClient,
   createWalletClient,
@@ -26,6 +27,48 @@ for (const file of ["../.env.demo-local", "../.env.demo-wallets"]) {
     const value = line.slice(separatorIndex + 1).trim();
     if (key && process.env[key] === undefined) process.env[key] = value;
   }
+}
+
+async function promptHidden(label) {
+  if (!input.isTTY || !output.isTTY) {
+    throw new Error(`${label} is required. Run in a TTY or set it in an ignored local env file.`);
+  }
+
+  return new Promise((resolve) => {
+    let value = "";
+    output.write(`${label}: `);
+    input.setRawMode(true);
+    input.resume();
+    input.setEncoding("utf8");
+
+    function onData(char) {
+      if (char === "\u0003") {
+        output.write("\n");
+        input.setRawMode(false);
+        input.pause();
+        process.exit(130);
+      }
+      if (char === "\r" || char === "\n") {
+        output.write("\n");
+        input.setRawMode(false);
+        input.pause();
+        input.off("data", onData);
+        resolve(value.trim());
+        return;
+      }
+      if (char === "\u007f") {
+        value = value.slice(0, -1);
+        return;
+      }
+      value += char;
+    }
+
+    input.on("data", onData);
+  });
+}
+
+if (!process.env.BUYER_PRIVATE_KEY && process.argv.includes("--prompt-buyer-key")) {
+  process.env.BUYER_PRIVATE_KEY = await promptHidden("BUYER_PRIVATE_KEY");
 }
 
 const contractAddress =

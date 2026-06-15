@@ -22,12 +22,12 @@ FUND_SUPPLIERS=true
 DEMO_DEADLINE_SECONDS=90
 ```
 
-Fill `BUYER_PRIVATE_KEY` locally. The seed script automatically loads `web/.env.demo-local` and `web/.env.demo-wallets` when they exist.
+Either fill `BUYER_PRIVATE_KEY` locally or use the hidden runtime prompt. The seed script automatically loads `web/.env.demo-local` and `web/.env.demo-wallets` when they exist.
 
 ## 3. Seed The Live Demo
 
 ```bash
-npm run seed:demo --workspace web
+npm run seed:demo --workspace web -- --prompt-buyer-key
 ```
 
 Expected terminal result:
