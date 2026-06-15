@@ -203,6 +203,10 @@ async function wait(hash, label) {
   await publicClient.waitForTransactionReceipt({ hash });
 }
 
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
 async function maybeFundSuppliers(buyerWallet, suppliers) {
   if (process.env.FUND_SUPPLIERS !== "true") return;
 
@@ -363,6 +367,16 @@ async function main() {
       args: [tenderId],
     });
 
+    assert(String(winnerBidId) === "2", `Expected winning bid ID 2, got ${winnerBidId}.`);
+    assert(
+      tender[9].toLowerCase() === supplierB.address.toLowerCase(),
+      `Expected Supplier B to win, got ${tender[9]}.`,
+    );
+    assert(
+      String(decryptResult[winningBidHandle]) === "980",
+      `Expected buyer decrypted winning price 980, got ${decryptResult[winningBidHandle]}.`,
+    );
+
     console.log(`Winning bid ID: ${winnerBidId}`);
     console.log(`Winning supplier: ${tender[9]}`);
     console.log(`Buyer decrypted winning price: ${decryptResult[winningBidHandle]}`);
@@ -395,6 +409,10 @@ async function main() {
         startTimestamp,
         durationDays,
       });
+      assert(
+        String(auditorDecrypt[winningBidHandle]) === "980",
+        `Expected auditor decrypted winning price 980, got ${auditorDecrypt[winningBidHandle]}.`,
+      );
       console.log(`Auditor decrypted winning price: ${auditorDecrypt[winningBidHandle]}`);
     }
 

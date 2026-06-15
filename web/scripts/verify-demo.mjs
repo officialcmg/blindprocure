@@ -23,6 +23,16 @@ if (!isAddress(process.env.EXPECTED_WINNER_ADDRESS)) {
 
 const tenderId = BigInt(process.env.TENDER_ID);
 const expectedWinner = process.env.EXPECTED_WINNER_ADDRESS.toLowerCase();
+const expectedWinnerBidId = process.env.EXPECTED_WINNER_BID_ID || "2";
+const expectedWinningPrice = process.env.EXPECTED_WINNING_PRICE || "980";
+
+if (expectedWinnerBidId !== "2") {
+  throw new Error(`Expected winner bid ID metadata should be 2, got ${expectedWinnerBidId}.`);
+}
+
+if (expectedWinningPrice !== "980") {
+  throw new Error(`Expected winning price metadata should be 980, got ${expectedWinningPrice}.`);
+}
 
 const abi = [
   {
