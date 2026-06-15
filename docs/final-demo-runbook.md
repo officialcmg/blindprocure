@@ -26,6 +26,14 @@ Either fill `BUYER_PRIVATE_KEY` locally or use the hidden runtime prompt. The se
 
 ## 3. Seed The Live Demo
 
+First confirm the hosted app is serving the expected public shell:
+
+```bash
+npm run verify:hosted --workspace web
+```
+
+Then seed:
+
 ```bash
 npm run seed:demo --workspace web -- --prompt-buyer-key
 ```

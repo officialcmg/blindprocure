@@ -9,7 +9,8 @@
     "lint": "eslint",
     "demo:wallets": "node scripts/create-demo-wallets.mjs",
     "seed:demo": "node scripts/seed-demo.mjs",
-    "verify:demo": "node scripts/verify-demo.mjs"
+    "verify:demo": "node scripts/verify-demo.mjs",
+    "verify:hosted": "node scripts/verify-hosted.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",
