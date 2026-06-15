@@ -106,10 +106,19 @@ Expected result: Supplier B wins, while losing bid prices stay redacted.
 
 ## Demo-Readiness Checklist
 
+Verified:
+
 - Contract tests pass.
 - Frontend lint and build pass.
 - Sepolia contract bytecode exists.
-- `cast` can read `nextTenderId`, tender metadata, bid count, finalization status, and winning supplier.
+- `cast` can read `nextTenderId`.
 - Local app loads `/`, `/demo`, `/tenders`, `/tenders/new`, and `/tenders/[id]`.
 - Hosted Vercel app points to the Sepolia contract address.
-- Browser dry run completes the full demo path without console errors.
+- Hosted browser checks pass with no console errors on desktop and mobile.
+- Missing tender IDs render as not found instead of showing zeroed contract state.
+
+Remaining before recording:
+
+- Seed the live demo tender with `npm run seed:demo --workspace web` after local buyer and supplier private-key env vars are available.
+- Re-run `cast` reads for the seeded tender metadata, bid count, finalization status, and winning supplier.
+- Browser dry run the full seeded demo path and confirm Supplier B wins with buyer-decrypted price `980`.
