@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "demo:wallets": "node scripts/create-demo-wallets.mjs",
-    "seed:demo": "node scripts/seed-demo.mjs"
+    "seed:demo": "node scripts/seed-demo.mjs",
+    "verify:demo": "node scripts/verify-demo.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",

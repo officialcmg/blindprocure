@@ -33,6 +33,7 @@ npm run seed:demo --workspace web -- --prompt-buyer-key
 Expected terminal result:
 
 - tender ID printed,
+- `web/.env.demo-result` written with public demo metadata,
 - three suppliers approved,
 - three encrypted bids submitted,
 - encrypted selection finalized,
@@ -41,7 +42,15 @@ Expected terminal result:
 - buyer decrypted winning price is `980`,
 - demo URL points to `https://blindprocure.vercel.app/tenders/<id>`.
 
-## 4. Verify With Cast
+## 4. Verify Public Contract State
+
+```bash
+npm run verify:demo --workspace web
+```
+
+The verifier reads `web/.env.demo-result` and checks title, budget cap, bid count, finalized status, recorded winner, and expected Supplier B result.
+
+## 5. Verify With Cast
 
 ```bash
 cast call 0x3801C32Fc2b61d9De992643825B80809Ac439443 "nextTenderId()(uint256)" --rpc-url "$SEPOLIA_RPC_URL"
@@ -56,7 +65,7 @@ The tender should show:
 - finalized `true`,
 - winner recorded `true`.
 
-## 5. Browser Dry Run
+## 6. Browser Dry Run
 
 Open `https://blindprocure.vercel.app/tenders/<id>`.
 
