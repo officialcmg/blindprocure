@@ -710,6 +710,8 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
   const bidCount = tenderExists && tender ? Number(tender[6]) : 0;
   const suppliers = useTenderSuppliers(tenderId, bidCount);
   const [supplierInput, setSupplierInput] = useState("");
+  const [supplierEmailInput, setSupplierEmailInput] = useState("");
+  const [resolvedSupplierState, setResolvedSupplierState] = useState<{ email: string; address: Address } | null>(null);
   const [bidPriceState, setBidPriceState] = useState<{ account?: Address; value: string }>({ value: "" });
   const [auditorInput, setAuditorInput] = useState("");
   const [decryptedPriceState, setDecryptedPriceState] = useState<{ account: Address; value: string } | null>(null);
@@ -758,6 +760,7 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
     query: { enabled: isContractConfigured && tenderExists && Boolean(address) },
   });
   const supplierAddressIsValid = isAddress(supplierInput);
+  const supplierEmailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supplierEmailInput.trim());
   const myRoleLabel = isBuyer
     ? "Tender creator"
     : currentUserBid.data
@@ -792,18 +795,49 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
     if (!accountReady || !address) throw new Error("Sign in and wait for your sponsored account to be ready.");
   }
 
-  async function approveSupplier() {
+  async function approveSupplierAddress(supplier: Address) {
     requireAccount();
-    if (!isAddress(supplierInput)) throw new Error("Enter a valid supplier address.");
     const data = encodeFunctionData({
       abi: blindProcureAbi,
       functionName: "approveSupplier",
-      args: [tenderId, supplierInput as Address],
+      args: [tenderId, supplier],
     });
     const tx = await sendCall({ to: blindProcureAddress, data, description: "Approve supplier" });
     setStatus({ label: "Approving supplier...", tx, tone: "pending" });
     await waitForReceipt(publicClient, tx);
     setStatus({ label: "Supplier approved.", tx, tone: "ok" });
+  }
+
+  async function approveSupplier() {
+    if (!isAddress(supplierInput)) throw new Error("Enter a valid supplier address.");
+    await approveSupplierAddress(supplierInput as Address);
+  }
+
+  async function approveSupplierEmail() {
+    requireAccount();
+    const email = supplierEmailInput.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new Error("Enter a valid supplier email address.");
+    }
+
+    setStatus({ label: "Resolving supplier email with Privy...", tone: "pending" });
+    const response = await fetch("/api/privy/resolve-supplier", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const result = (await response.json().catch(() => null)) as { address?: string; error?: string } | null;
+
+    if (!response.ok || !result?.address) {
+      throw new Error(result?.error || "Supplier email resolution failed.");
+    }
+    if (!isAddress(result.address)) {
+      throw new Error("Privy returned an invalid smart wallet address.");
+    }
+
+    setResolvedSupplierState({ email, address: result.address as Address });
+    setSupplierInput(result.address);
+    await approveSupplierAddress(result.address as Address);
   }
 
   async function submitEncryptedBid() {
@@ -1016,8 +1050,28 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                 <Panel icon={<ShieldCheck size={18} />} title="Creator actions">
                   <div className="grid gap-4">
                     {!isBuyer && <Notice>Only the buyer address can approve suppliers, finalize the tender, or grant auditor access.</Notice>}
+                    <div className="grid gap-3 border border-[var(--line)] bg-white/60 p-3">
+                      <label className="grid gap-2 text-sm font-medium">
+                        Supplier email
+                        <input
+                          className="rounded border border-[var(--line)] bg-white px-3 py-2 text-sm"
+                          placeholder="supplier@company.com"
+                          value={supplierEmailInput}
+                          onChange={(event) => setSupplierEmailInput(event.target.value)}
+                        />
+                      </label>
+                      <ActionButton disabled={!isBuyer || tender[6] > 0 || !supplierEmailIsValid || isActing} onClick={() => run(approveSupplierEmail)}>
+                        <SearchCheck size={16} /> Resolve email and approve
+                      </ActionButton>
+                      {resolvedSupplierState && (
+                        <Notice tone="ok">
+                          {resolvedSupplierState.email} resolves to {shortAddress(resolvedSupplierState.address)}.
+                        </Notice>
+                      )}
+                      {supplierEmailInput && !supplierEmailIsValid && <Notice tone="error">Enter a valid supplier email address.</Notice>}
+                    </div>
                     <label className="grid gap-2 text-sm font-medium">
-                      Supplier wallet address
+                      Supplier wallet address fallback
                       <input
                         className="rounded border border-[var(--line)] bg-white px-3 py-2 text-sm"
                         placeholder="0x..."
