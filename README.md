@@ -44,7 +44,7 @@ npm run build --workspace web
 
 Current deployed contract:
 
-- BlindProcure: `0x3801C32Fc2b61d9De992643825B80809Ac439443`
+- BlindProcure: `0x81C6Eb008787999112D2dD58dB3cbAdE4848F9c5`
 - Deployment transaction: `0xf3fc72477e0639396216233c61b7025e76ceee985cd684fe33572141f3d178ad`
 - Network: Sepolia
 - Hosted demo: `https://blindprocure.vercel.app`
@@ -83,7 +83,7 @@ Optional local env vars:
 - `AUDITOR_PRIVATE_KEY`
 - `FUND_SUPPLIERS=true`
 - `DEMO_DEADLINE_SECONDS=600`
-- `BLINDPROCURE_ADDRESS=0x3801C32Fc2b61d9De992643825B80809Ac439443`
+- `BLINDPROCURE_ADDRESS=0x81C6Eb008787999112D2dD58dB3cbAdE4848F9c5`
 
 Run:
 

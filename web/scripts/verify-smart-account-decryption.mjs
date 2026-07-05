@@ -17,7 +17,7 @@ loadDemoEnv();
 const blindProcureAddress =
   process.env.BLINDPROCURE_ADDRESS ||
   process.env.NEXT_PUBLIC_BLINDPROCURE_ADDRESS ||
-  "0x3801C32Fc2b61d9De992643825B80809Ac439443";
+  "0x81C6Eb008787999112D2dD58dB3cbAdE4848F9c5";
 const rpcUrl = process.env.SEPOLIA_RPC_URL || process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL;
 const testPrivateKey = process.env.SMART_ACCOUNT_TEST_PRIVATE_KEY || process.env.SUPPLIER_A_PRIVATE_KEY;
 

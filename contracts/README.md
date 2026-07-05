@@ -61,7 +61,7 @@ env HOME=/Users/chrismg/Developer/bounties/zama/.home npm test
 
 Current Sepolia deployment:
 
-- BlindProcure: `0x3801C32Fc2b61d9De992643825B80809Ac439443`
+- BlindProcure: `0x81C6Eb008787999112D2dD58dB3cbAdE4848F9c5`
 - Deployment transaction: `0xf3fc72477e0639396216233c61b7025e76ceee985cd684fe33572141f3d178ad`
 
 Set Hardhat vars before Sepolia deployment:

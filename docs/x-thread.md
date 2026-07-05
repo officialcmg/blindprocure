@@ -28,6 +28,6 @@
 
 11. Live app: https://blindprocure.vercel.app
 
-12. Contract: 0x3801C32Fc2b61d9De992643825B80809Ac439443 on Sepolia
+12. Contract: 0x81C6Eb008787999112D2dD58dB3cbAdE4848F9c5 on Sepolia
 
 13. Built for the Zama Developer Program Builder Track. The goal: make confidential procurement easy to demo, easy to audit, and hard to misunderstand.

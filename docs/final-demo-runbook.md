@@ -16,7 +16,7 @@ Create an ignored local env file such as `web/.env.demo-local`:
 
 ```bash
 SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
-BLINDPROCURE_ADDRESS=0x3801C32Fc2b61d9De992643825B80809Ac439443
+BLINDPROCURE_ADDRESS=0x81C6Eb008787999112D2dD58dB3cbAdE4848F9c5
 BUYER_PRIVATE_KEY=
 FUND_SUPPLIERS=true
 DEMO_DEADLINE_SECONDS=600
@@ -61,8 +61,8 @@ The verifier reads `web/.env.demo-result` and checks title, budget cap, bid coun
 ## 5. Verify With Cast
 
 ```bash
-cast call 0x3801C32Fc2b61d9De992643825B80809Ac439443 "nextTenderId()(uint256)" --rpc-url "$SEPOLIA_RPC_URL"
-cast call 0x3801C32Fc2b61d9De992643825B80809Ac439443 "tenders(uint256)((address,string,bytes32,uint64,uint64,bool,uint32,bool,bool,address))" "$TENDER_ID" --rpc-url "$SEPOLIA_RPC_URL"
+cast call 0x81C6Eb008787999112D2dD58dB3cbAdE4848F9c5 "nextTenderId()(uint256)" --rpc-url "$SEPOLIA_RPC_URL"
+cast call 0x81C6Eb008787999112D2dD58dB3cbAdE4848F9c5 "tenders(uint256)((address,string,bytes32,uint64,uint64,bool,uint32,bool,bool,address))" "$TENDER_ID" --rpc-url "$SEPOLIA_RPC_URL"
 ```
 
 The tender should show:

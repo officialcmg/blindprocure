@@ -15,7 +15,9 @@ import {
   Lock,
   Plus,
   RefreshCw,
+  SearchCheck,
   ShieldCheck,
+  Sparkles,
   Trophy,
   UsersRound,
 } from "lucide-react";
@@ -231,7 +233,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8">
       <header className="flex flex-col gap-4 border-b border-[var(--line)] pb-4 md:flex-row md:items-center md:justify-between">
-        <Link href="/" className="flex items-center gap-3">
+        <Link href="/app" className="flex items-center gap-3">
           <span className="grid h-10 w-10 place-items-center rounded bg-[var(--ink)] text-white">
             <ShieldCheck size={20} />
           </span>
@@ -302,49 +304,112 @@ function TxToast({ status }: { status: TxStatus | null }) {
 }
 
 export function HomePage() {
+  const outcomes = [
+    ["Private price discovery", "Suppliers submit encrypted numbers. Competitors never see losing prices."],
+    ["Auditable award path", "The public can inspect tender state, bid count, winner identity, and transaction history."],
+    ["Selective disclosure", "Buyers and approved auditors decrypt the winning price without publishing every quote."],
+  ];
+
   return (
-    <Shell>
-      <section className="grid flex-1 gap-8 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-        <div className="max-w-2xl">
-          <p className="mb-4 inline-flex rounded border border-[var(--line)] bg-[var(--panel)] px-3 py-1 text-sm text-[var(--muted)]">
-            Zama FHEVM procurement demo
+    <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+      <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 sm:px-6 lg:px-8">
+        <Link href="/" className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded bg-[var(--ink)] text-white">
+            <ShieldCheck size={20} />
+          </span>
+          <span>
+            <span className="block text-lg font-semibold">BlindProcure</span>
+            <span className="block text-sm text-[var(--muted)]">Confidential procurement</span>
+          </span>
+        </Link>
+        <div className="flex items-center gap-3">
+          <Link className="hidden text-sm font-semibold text-[var(--muted)] sm:inline" href="/app/tenders">
+            Tenders
+          </Link>
+          <Link className="rounded bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white" href="/app">
+            Open app
+          </Link>
+        </div>
+      </header>
+
+      <section className="mx-auto grid min-h-[calc(100vh-88px)] w-full max-w-7xl gap-10 px-4 pb-16 pt-8 sm:px-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:px-8">
+        <div className="max-w-3xl">
+          <p className="mb-4 inline-flex items-center gap-2 rounded border border-[var(--line)] bg-[var(--panel)] px-3 py-1 text-sm font-medium text-[var(--accent-strong)]">
+            <Sparkles size={15} /> Powered by Zama FHEVM on Sepolia
           </p>
-          <h1 className="text-4xl font-semibold leading-tight text-[var(--foreground)] sm:text-5xl">
-            Choose the cheapest compliant supplier without exposing losing bids.
+          <h1 className="max-w-4xl text-5xl font-semibold leading-tight tracking-normal text-[var(--foreground)] sm:text-6xl">
+            Procurement without public bid leakage.
           </h1>
-          <p className="mt-5 text-lg leading-8 text-[var(--muted)]">
-            Buyers get an auditable tender. Suppliers keep price strategy private. Zama FHE lets the
-            contract compare encrypted bids and reveal only the winning supplier.
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--muted)]">
+            BlindProcure lets buyers run sealed-bid tenders where suppliers encrypt prices in the
+            browser, the contract selects the lowest valid offer with FHE, and only the right result
+            is revealed.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              className="inline-flex items-center gap-2 rounded bg-[var(--accent)] px-5 py-3 font-semibold text-white"
-              href="/demo"
-            >
-              Open demo flow <ArrowRight size={18} />
+            <Link className="inline-flex items-center gap-2 rounded bg-[var(--accent)] px-5 py-3 font-semibold text-white" href="/app">
+              Launch workspace <ArrowRight size={18} />
             </Link>
-            <Link className="rounded border border-[var(--line)] px-5 py-3 font-semibold" href="/tenders/new">
+            <Link className="rounded border border-[var(--line)] bg-[var(--panel)] px-5 py-3 font-semibold" href="/app/tenders/new">
               Create tender
             </Link>
           </div>
-        </div>
-        <div className="rounded border border-[var(--line)] bg-[var(--panel)] p-4">
-          <div className="grid gap-3">
-            {[
-              ["Buyer posts tender", "Title, deadline, spec hash, budget cap are public."],
-              ["Suppliers encrypt bids", "The browser submits encrypted handles and input proof."],
-              ["Contract selects winner", "FHE comparisons choose the lowest valid encrypted bid."],
-              ["Only allowed reveal", "Public sees winner identity; buyer decrypts winning price."],
-            ].map(([title, body]) => (
-              <div key={title} className="rounded border border-[var(--line)] bg-white/60 p-4">
-                <div className="font-semibold">{title}</div>
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            {outcomes.map(([title, body]) => (
+              <div key={title} className="border-l border-[var(--line)] pl-4">
+                <div className="text-sm font-semibold">{title}</div>
                 <div className="mt-1 text-sm leading-6 text-[var(--muted)]">{body}</div>
               </div>
             ))}
           </div>
         </div>
+
+        <div className="border border-[var(--line)] bg-[var(--panel)] p-4 shadow-sm">
+          <div className="border border-[var(--line)] bg-white">
+            <div className="flex items-center justify-between border-b border-[var(--line)] px-4 py-3">
+              <div>
+                <div className="text-sm font-semibold">Office laptops Q3</div>
+                <div className="text-xs text-[var(--muted)]">Sealed supplier selection</div>
+              </div>
+              <span className="rounded bg-[#e9f8f5] px-2 py-1 text-xs font-semibold text-[var(--accent-strong)]">
+                Finalized
+              </span>
+            </div>
+            <div className="grid gap-4 p-4">
+              <div className="grid grid-cols-3 gap-3">
+                <Metric label="Budget" value="1500" />
+                <Metric label="Bids" value="3 encrypted" />
+                <Metric label="Winner ID" value="#2" />
+              </div>
+              <div className="grid gap-2">
+                {[
+                  ["Bid #1", "0x8579...E09c"],
+                  ["Bid #2", "0x479D...BA49"],
+                  ["Bid #3", "0x64E1...B7bB"],
+                ].map(([bid, supplier], index) => (
+                  <div key={bid} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border border-[var(--line)] bg-[var(--panel)] px-3 py-2">
+                    <span className="mono text-xs">{bid}</span>
+                    <span className="mono text-xs text-[var(--muted)]">{supplier}</span>
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent-strong)]">
+                      {index === 1 ? <CheckCircle2 size={13} /> : <Lock size={13} />}
+                      {index === 1 ? "Selected" : "Encrypted"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="grid gap-2 border border-[var(--line)] bg-[#f8fbfa] p-3">
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <SearchCheck size={16} className="text-[var(--accent)]" /> Audit view
+                </div>
+                <p className="text-sm leading-6 text-[var(--muted)]">
+                  Public viewers see the winning supplier and proof-backed result. Authorized users
+                  decrypt only the winning price.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
-    </Shell>
+    </main>
   );
 }
 
@@ -376,7 +441,7 @@ export function TendersPage() {
             <h1 className="text-3xl font-semibold">Tenders</h1>
             <p className="mt-2 text-[var(--muted)]">Public procurement metadata with confidential bid prices.</p>
           </div>
-          <Link className="inline-flex items-center gap-2 rounded bg-[var(--accent)] px-4 py-2 text-white" href="/tenders/new">
+          <Link className="inline-flex items-center gap-2 rounded bg-[var(--accent)] px-4 py-2 text-white" href="/app/tenders/new">
             <Plus size={16} /> New tender
           </Link>
         </div>
@@ -398,7 +463,7 @@ function TenderListCard({ tenderId, tender, nowMs }: { tenderId: bigint; tender:
   return (
     <Link
       className="grid gap-4 rounded border border-[var(--line)] bg-[var(--panel)] p-4 transition hover:border-[var(--accent)] md:grid-cols-[1fr_auto]"
-      href={`/tenders/${tenderId}`}
+      href={`/app/tenders/${tenderId}`}
     >
       <div>
         <div className="text-lg font-semibold">{tender[1]}</div>
@@ -465,7 +530,7 @@ export function CreateTenderPage() {
       if (!created) throw new Error("Tender transaction confirmed, but its creation event was not found.");
 
       setStatus({ label: `Tender #${created.args.tenderId} created.`, tx, tone: "ok" });
-      router.push(`/tenders/${created.args.tenderId}`);
+      router.push(`/app/tenders/${created.args.tenderId}`);
     } catch (error) {
       setStatus({
         label: actionErrorMessage(error, "Tender creation failed."),
@@ -531,12 +596,12 @@ export function DemoPage() {
           buyer finalizes, winner identity is publicly recorded, and the winning price is decrypted by the buyer.
         </p>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <Link className="rounded border border-[var(--line)] bg-[var(--panel)] p-5" href="/tenders/new">
+          <Link className="rounded border border-[var(--line)] bg-[var(--panel)] p-5" href="/app/tenders/new">
             <FileCheck2 className="mb-4 text-[var(--accent)]" />
             <div className="font-semibold">Create the demo tender</div>
             <div className="mt-2 text-sm text-[var(--muted)]">Use the prefilled Office laptops Q3 tender.</div>
           </Link>
-          <Link className="rounded border border-[var(--line)] bg-[var(--panel)] p-5" href="/tenders/1">
+          <Link className="rounded border border-[var(--line)] bg-[var(--panel)] p-5" href="/app/tenders/1">
             <Trophy className="mb-4 text-[var(--accent)]" />
             <div className="font-semibold">Open tender #1</div>
             <div className="mt-2 text-sm text-[var(--muted)]">Use this once the demo tender exists on Sepolia.</div>
