@@ -415,6 +415,7 @@ export function HomePage() {
 
 export function TendersPage() {
   const nowMs = useNow();
+  const { authenticated, accountReady, smartAccountAddress: address, login } = usePrivyAccount();
   const { data: nextTenderId } = useReadContract({
     address: blindProcureAddress,
     abi: blindProcureAbi,
@@ -432,30 +433,103 @@ export function TendersPage() {
     })),
     query: { enabled: isContractConfigured && ids.length > 0, refetchInterval: 8000 },
   });
+  const tenderRows = useMemo(
+    () =>
+      tenders.data
+        ?.map((result, index) => {
+          const tender = result.result as TenderTuple | undefined;
+          return tender ? { tenderId: ids[index], tender } : null;
+        })
+        .filter((row): row is { tenderId: bigint; tender: TenderTuple } => Boolean(row)) || [],
+    [ids, tenders.data],
+  );
+  const myTenderRows = useMemo(
+    () => tenderRows.filter((row) => address && row.tender[0].toLowerCase() === address.toLowerCase()),
+    [address, tenderRows],
+  );
+  const activeCount = tenderRows.filter((row) => !row.tender[7] && nowMs < Number(row.tender[3]) * 1000).length;
 
   return (
     <Shell>
       <section className="py-8">
-        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="text-3xl font-semibold">Tenders</h1>
-            <p className="mt-2 text-[var(--muted)]">Public procurement metadata with confidential bid prices.</p>
+            <p className="mono text-xs text-[var(--muted)]">Sepolia workspace</p>
+            <h1 className="mt-2 text-3xl font-semibold">Tenders</h1>
+            <p className="mt-2 max-w-2xl text-[var(--muted)]">Create a sealed tender, approve suppliers, and finalize the encrypted winner selection.</p>
           </div>
           <Link className="inline-flex items-center gap-2 rounded bg-[var(--accent)] px-4 py-2 text-white" href="/app/tenders/new">
             <Plus size={16} /> New tender
           </Link>
         </div>
         {!isContractConfigured && <Notice tone="error">Set `NEXT_PUBLIC_BLINDPROCURE_ADDRESS` to load live tenders.</Notice>}
-        {isContractConfigured && ids.length === 0 && <Notice>No tenders have been created yet.</Notice>}
-        <div className="grid gap-3">
-          {tenders.data?.map((result, index) => {
-            const tender = result.result as TenderTuple | undefined;
-            if (!tender) return null;
-            return <TenderListCard key={ids[index].toString()} tenderId={ids[index]} tender={tender} nowMs={nowMs} />;
-          })}
-        </div>
+        {isContractConfigured && (
+          <div className="grid gap-5">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Metric label="Total tenders" value={String(tenderRows.length)} />
+              <Metric label="Open tenders" value={String(activeCount)} />
+              <Metric label="Created by me" value={address ? String(myTenderRows.length) : "-"} />
+            </div>
+
+            {!authenticated && (
+              <Notice>
+                <button className="font-semibold text-[var(--accent)] underline" onClick={() => login({ loginMethods: ["email", "google"] })}>
+                  Sign in
+                </button>{" "}
+                to create tenders and see your buyer workspace.
+              </Notice>
+            )}
+            {authenticated && !accountReady && <Notice>Preparing your sponsored account...</Notice>}
+
+            {address && (
+              <TenderSection
+                title="Created by me"
+                emptyText="You have not created a tender from this account yet."
+                rows={myTenderRows}
+                nowMs={nowMs}
+              />
+            )}
+
+            <TenderSection
+              title="All public tenders"
+              emptyText="No tenders have been created yet."
+              rows={tenderRows}
+              nowMs={nowMs}
+            />
+          </div>
+        )}
       </section>
     </Shell>
+  );
+}
+
+function TenderSection({
+  title,
+  emptyText,
+  rows,
+  nowMs,
+}: {
+  title: string;
+  emptyText: string;
+  rows: { tenderId: bigint; tender: TenderTuple }[];
+  nowMs: number;
+}) {
+  return (
+    <section className="grid gap-3">
+      <div className="flex items-center justify-between border-b border-[var(--line)] pb-2">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        <span className="rounded bg-[var(--panel)] px-2 py-1 text-xs font-semibold text-[var(--muted)]">{rows.length}</span>
+      </div>
+      {rows.length === 0 ? (
+        <Notice>{emptyText}</Notice>
+      ) : (
+        <div className="grid gap-3">
+          {rows.map((row) => (
+            <TenderListCard key={row.tenderId.toString()} tenderId={row.tenderId} tender={row.tender} nowMs={nowMs} />
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -683,6 +757,25 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
     args: [tenderId, (address || zeroAddress) as Address],
     query: { enabled: isContractConfigured && tenderExists && Boolean(address) },
   });
+  const supplierAddressIsValid = isAddress(supplierInput);
+  const myRoleLabel = isBuyer
+    ? "Tender creator"
+    : currentUserBid.data
+      ? "Supplier with submitted bid"
+      : currentUserApproval.data
+        ? "Approved supplier"
+        : authenticated
+          ? "Signed-in viewer"
+          : "Public viewer";
+  const stageItems = tender
+    ? [
+        { label: "Created", done: true },
+        { label: "Bidding", done: tender[6] > 0 || isClosed || tender[7] },
+        { label: "Closed", done: isClosed || tender[7] },
+        { label: "Finalized", done: tender[7] },
+        { label: "Winner public", done: winnerRecorded },
+      ]
+    : [];
 
   const submittedSuppliers = useMemo(
     () =>
@@ -874,41 +967,92 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
           <Notice tone="error">Tender #{tenderId.toString()} was not found.</Notice>
         )}
         {tenderExists && tender && (
-          <div className="grid gap-5">
-            <div className="rounded border border-[var(--line)] bg-[var(--panel)] p-5">
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <p className="mono text-xs text-[var(--muted)]">Tender #{tenderId.toString()}</p>
-                  <h1 className="mt-2 text-3xl font-semibold">{tender[1]}</h1>
-                  <p className="mt-2 max-w-3xl text-[var(--muted)]">
-                    Suppliers submit encrypted prices. The contract chooses the lowest bid under the public budget cap.
-                  </p>
+          <div className="grid gap-6">
+            <section className="border border-[var(--line)] bg-[var(--panel)] p-5">
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="mono rounded bg-white px-2 py-1 text-xs text-[var(--muted)]">Tender #{tenderId.toString()}</span>
+                    <StatusBadge label={tender[7] ? "Finalized" : isClosed ? "Ready to finalize" : "Open"} tone={tender[7] ? "ok" : isClosed ? "warn" : "info"} />
+                    <StatusBadge label={myRoleLabel} tone={isBuyer ? "ok" : "info"} />
+                  </div>
+                  <h1 className="mt-3 text-3xl font-semibold leading-tight">{tender[1]}</h1>
+                  <div className="mt-3 grid gap-2 text-sm text-[var(--muted)]">
+                    <AddressLine label="Buyer" address={tender[0]} />
+                    <AddressLine label="Spec hash" address={tender[2]} />
+                  </div>
                 </div>
-                <a className="mono text-xs underline" href={`${sepoliaExplorerBaseUrl}/address/${blindProcureAddress}`} target="_blank" rel="noreferrer">
-                  Contract {shortAddress(blindProcureAddress)}
-                </a>
+                <div className="flex flex-wrap gap-2">
+                  <Link className="rounded border border-[var(--line)] bg-white px-3 py-2 text-sm font-semibold" href="/app">
+                    Back to workspace
+                  </Link>
+                  <a className="rounded border border-[var(--line)] bg-white px-3 py-2 text-sm font-semibold" href={`${sepoliaExplorerBaseUrl}/address/${blindProcureAddress}`} target="_blank" rel="noreferrer">
+                    Contract {shortAddress(blindProcureAddress)}
+                  </a>
+                </div>
               </div>
+
               <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <Metric label="Budget cap" value={tender[4].toString()} />
                 <Metric label="Deadline" value={formatDeadline(tender[3], nowMs)} />
                 <Metric label="Encrypted bids" value={String(tender[6])} />
-                <Metric label="Status" value={tender[7] ? "Finalized" : isClosed ? "Ready to finalize" : "Open"} />
+                <Metric label="Winner" value={winnerRecorded && winner && winner !== zeroAddress ? shortAddress(winner) : "Pending"} />
               </div>
-            </div>
 
-            <div className="grid gap-5 lg:grid-cols-[1fr_0.9fr]">
+              <div className="mt-5 grid gap-2 sm:grid-cols-5">
+                {stageItems.map((item, index) => (
+                  <div key={item.label} className={`border px-3 py-2 text-sm ${item.done ? "border-[var(--accent)] bg-[#e9f8f5] text-[var(--accent-strong)]" : "border-[var(--line)] bg-white text-[var(--muted)]"}`}>
+                    <div className="flex items-center gap-2 font-semibold">
+                      {item.done ? <CheckCircle2 size={15} /> : <span className="grid h-[15px] w-[15px] place-items-center rounded-full border border-current text-[10px]">{index + 1}</span>}
+                      {item.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
               <div className="grid gap-5">
-                <Panel icon={<UsersRound size={18} />} title="Encrypted bid ledger">
+                <Panel icon={<ShieldCheck size={18} />} title="Creator actions">
+                  <div className="grid gap-4">
+                    {!isBuyer && <Notice>Only the buyer address can approve suppliers, finalize the tender, or grant auditor access.</Notice>}
+                    <label className="grid gap-2 text-sm font-medium">
+                      Supplier wallet address
+                      <input
+                        className="rounded border border-[var(--line)] bg-white px-3 py-2 text-sm"
+                        placeholder="0x..."
+                        value={supplierInput}
+                        onChange={(event) => setSupplierInput(event.target.value)}
+                      />
+                    </label>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <ActionButton disabled={!isBuyer || tender[6] > 0 || !supplierAddressIsValid || isActing} onClick={() => run(approveSupplier)}>
+                        <CheckCircle2 size={16} /> Approve supplier address
+                      </ActionButton>
+                      <ActionButton disabled={!isBuyer || !isClosed || tender[7] || isActing} onClick={() => run(finalizeTender)}>
+                        <RefreshCw size={16} /> Finalize selection
+                      </ActionButton>
+                    </div>
+                    {supplierInput && !supplierAddressIsValid && <Notice tone="error">Enter a valid `0x` supplier address.</Notice>}
+                  </div>
+                </Panel>
+
+                <Panel icon={<UsersRound size={18} />} title="Encrypted bids">
                   {submittedSuppliers.length === 0 ? (
-                    <p className="text-sm text-[var(--muted)]">No encrypted bids yet.</p>
+                    <Notice>No supplier has submitted an encrypted bid yet.</Notice>
                   ) : (
-                    <div className="grid gap-2">
+                    <div className="overflow-hidden border border-[var(--line)] bg-white">
+                      <div className="grid grid-cols-[72px_1fr_132px] gap-3 border-b border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2 text-xs font-semibold uppercase text-[var(--muted)]">
+                        <span>Bid</span>
+                        <span>Supplier</span>
+                        <span>Status</span>
+                      </div>
                       {submittedSuppliers.map((row) => (
-                        <div key={row.bidId} className="grid gap-2 rounded border border-[var(--line)] bg-white/60 p-3 sm:grid-cols-[auto_1fr_auto] sm:items-center">
-                          <span className="mono text-xs">Bid #{row.bidId}</span>
-                          <span className="mono text-xs text-[var(--muted)]">{row.supplier}</span>
-                          <span className="inline-flex items-center gap-1 rounded bg-[var(--panel-strong)] px-2 py-1 text-xs font-semibold text-[var(--accent-strong)]">
-                            <Lock size={12} /> Price encrypted
+                        <div key={row.bidId} className="grid grid-cols-[72px_1fr_132px] gap-3 border-b border-[var(--line)] px-3 py-3 text-sm last:border-b-0">
+                          <span className="mono text-xs">#{row.bidId}</span>
+                          <span className="mono min-w-0 break-all text-xs text-[var(--muted)]">{row.supplier}</span>
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent-strong)]">
+                            <Lock size={12} /> Encrypted
                           </span>
                         </div>
                       ))}
@@ -916,83 +1060,72 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                   )}
                 </Panel>
 
-                <Panel icon={<Trophy size={18} />} title="Winner reveal">
-                  <div className="grid gap-3">
-                    <div className="rounded border border-[var(--line)] bg-white/60 p-3">
-                      <div className="text-sm text-[var(--muted)]">Winning supplier</div>
-                      <div className="mono mt-1 break-all text-sm font-semibold">
-                        {winnerRecorded && winner && winner !== zeroAddress ? winner : "Not publicly recorded"}
+                <Panel icon={<Trophy size={18} />} title="Award result">
+                  <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+                    <div className="grid gap-2">
+                      <div className="text-sm font-medium text-[var(--muted)]">Public winning supplier</div>
+                      <div className="mono min-h-10 break-all border border-[var(--line)] bg-white px-3 py-2 text-sm font-semibold">
+                        {winnerRecorded && winner && winner !== zeroAddress ? winner : "Not recorded yet"}
                       </div>
+                      {publicWinnerId && <Notice tone="ok">Publicly decrypted winning bid ID: {publicWinnerId}</Notice>}
                     </div>
-                    {publicWinnerId && <Notice tone="ok">Publicly decrypted winning bid ID: {publicWinnerId}</Notice>}
                     <ActionButton disabled={!tender[7] || winnerRecorded || !accountReady || isActing} onClick={() => run(revealWinner)}>
-                      <Eye size={16} /> Reveal winner identity
+                      <Eye size={16} /> Reveal winner
                     </ActionButton>
                   </div>
                 </Panel>
               </div>
 
-              <div className="grid gap-5">
-                <Panel icon={<ShieldCheck size={18} />} title="Buyer controls">
-                  <div className="grid gap-3">
-                    <input
-                      className="rounded border border-[var(--line)] bg-white px-3 py-2 text-sm"
-                      placeholder="Supplier account ID"
-                      value={supplierInput}
-                      onChange={(event) => setSupplierInput(event.target.value)}
-                    />
-                    <ActionButton disabled={!isBuyer || tender[6] > 0 || !supplierInput || isActing} onClick={() => run(approveSupplier)}>
-                      <CheckCircle2 size={16} /> Approve supplier
-                    </ActionButton>
-                    <ActionButton disabled={!isBuyer || !isClosed || tender[7] || isActing} onClick={() => run(finalizeTender)}>
-                      <RefreshCw size={16} /> Finalize encrypted selection
-                    </ActionButton>
-                  </div>
-                </Panel>
-
+              <aside className="grid content-start gap-5">
                 <Panel icon={<Lock size={18} />} title="Supplier bid">
                   <div className="grid gap-3">
                     <Notice tone={currentUserApproval.data ? "ok" : "info"}>
                       {currentUserApproval.data
-                        ? "Your account is approved for this tender."
-                        : "Sign in with an approved supplier account before bidding."}
+                        ? "This signed-in supplier address is approved."
+                        : "Sign in with an approved supplier address before bidding."}
                     </Notice>
-                    <input
-                      className="rounded border border-[var(--line)] bg-white px-3 py-2 text-sm"
-                      inputMode="numeric"
-                      placeholder="Encrypted bid price"
-                      value={bidPrice}
-                      onChange={(event) => setBidPrice(event.target.value.replace(/\D/g, ""))}
-                    />
+                    <label className="grid gap-2 text-sm font-medium">
+                      Bid price
+                      <input
+                        className="rounded border border-[var(--line)] bg-white px-3 py-2 text-sm"
+                        inputMode="numeric"
+                        placeholder="980"
+                        value={bidPrice}
+                        onChange={(event) => setBidPrice(event.target.value.replace(/\D/g, ""))}
+                      />
+                    </label>
                     <ActionButton
                       disabled={!accountReady || !currentUserApproval.data || Boolean(currentUserBid.data) || !bidPrice || tender[7] || isClosed || isActing}
                       onClick={() => run(submitEncryptedBid)}
                     >
-                      <Lock size={16} /> Encrypt and submit bid
+                      <Lock size={16} /> Encrypt and submit
                     </ActionButton>
-                    {currentUserBid.data && <Notice tone="ok">Your account has already submitted an encrypted bid.</Notice>}
+                    {currentUserBid.data && <Notice tone="ok">This supplier has already submitted an encrypted bid.</Notice>}
                   </div>
                 </Panel>
 
-                <Panel icon={<KeyRound size={18} />} title="Selective price access">
+                <Panel icon={<KeyRound size={18} />} title="Private price access">
                   <div className="grid gap-3">
                     <ActionButton disabled={!tender[7] || !accountReady || isActing} onClick={() => run(decryptPrice)}>
                       <KeyRound size={16} /> Decrypt winning price
                     </ActionButton>
                     {decryptedPrice && <Notice tone="ok">Winning price: {decryptedPrice}</Notice>}
-                    <input
-                      className="rounded border border-[var(--line)] bg-white px-3 py-2 text-sm"
-                      placeholder="Auditor account ID"
-                      value={auditorInput}
-                      onChange={(event) => setAuditorInput(event.target.value)}
-                    />
+                    <label className="grid gap-2 text-sm font-medium">
+                      Auditor wallet address
+                      <input
+                        className="rounded border border-[var(--line)] bg-white px-3 py-2 text-sm"
+                        placeholder="0x..."
+                        value={auditorInput}
+                        onChange={(event) => setAuditorInput(event.target.value)}
+                      />
+                    </label>
                     <ActionButton disabled={!isBuyer || !tender[7] || !auditorInput || isActing} onClick={() => run(grantAuditor)}>
                       <UsersRound size={16} /> Grant auditor access
                     </ActionButton>
                   </div>
                 </Panel>
-              </div>
-            </div>
+              </aside>
+            </section>
             <TxToast status={status} />
           </div>
         )}
@@ -1006,6 +1139,26 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div className="rounded border border-[var(--line)] bg-white/60 p-3">
       <div className="text-xs uppercase text-[var(--muted)]">{label}</div>
       <div className="mt-1 text-sm font-semibold">{value}</div>
+    </div>
+  );
+}
+
+function StatusBadge({ label, tone }: { label: string; tone: "ok" | "warn" | "info" }) {
+  const toneClass =
+    tone === "ok"
+      ? "bg-[#e9f8f5] text-[var(--accent-strong)]"
+      : tone === "warn"
+        ? "bg-[#fff4dc] text-[#8a5b00]"
+        : "bg-white text-[var(--muted)]";
+
+  return <span className={`rounded px-2 py-1 text-xs font-semibold ${toneClass}`}>{label}</span>;
+}
+
+function AddressLine({ label, address }: { label: string; address: string }) {
+  return (
+    <div className="grid gap-1 sm:grid-cols-[88px_1fr]">
+      <span className="font-medium text-[var(--foreground)]">{label}</span>
+      <span className="mono min-w-0 break-all text-xs">{address}</span>
     </div>
   );
 }
