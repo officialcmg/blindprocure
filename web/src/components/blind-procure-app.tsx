@@ -1061,7 +1061,7 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                         />
                       </label>
                       <ActionButton disabled={!isBuyer || tender[6] > 0 || !supplierEmailIsValid || isActing} onClick={() => run(approveSupplierEmail)}>
-                        <SearchCheck size={16} /> Resolve email and approve
+                        <SearchCheck size={16} /> Approve
                       </ActionButton>
                       {resolvedSupplierState && (
                         <Notice tone="ok">
