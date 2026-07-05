@@ -27,26 +27,28 @@ async function promptHidden(label) {
     input.resume();
     input.setEncoding("utf8");
 
-    function onData(char) {
-      if (char === "\u0003") {
-        output.write("\n");
-        input.setRawMode(false);
-        input.pause();
-        process.exit(130);
+    function onData(chunk) {
+      for (const char of chunk) {
+        if (char === "\u0003") {
+          output.write("\n");
+          input.setRawMode(false);
+          input.pause();
+          process.exit(130);
+        }
+        if (char === "\r" || char === "\n") {
+          output.write("\n");
+          input.setRawMode(false);
+          input.pause();
+          input.off("data", onData);
+          resolve(value.trim());
+          return;
+        }
+        if (char === "\u007f") {
+          value = value.slice(0, -1);
+          continue;
+        }
+        value += char;
       }
-      if (char === "\r" || char === "\n") {
-        output.write("\n");
-        input.setRawMode(false);
-        input.pause();
-        input.off("data", onData);
-        resolve(value.trim());
-        return;
-      }
-      if (char === "\u007f") {
-        value = value.slice(0, -1);
-        return;
-      }
-      value += char;
     }
 
     input.on("data", onData);
@@ -221,6 +223,29 @@ async function maybeFundSuppliers(buyerWallet, suppliers) {
   }
 }
 
+async function finalizeWithRetry(buyerWallet, tenderId) {
+  const maxAttempts = Number(process.env.DEMO_FINALIZE_ATTEMPTS || "12");
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const finalizeHash = await buyerWallet.writeContract({
+        address: contractAddress,
+        abi,
+        functionName: "finalizeTender",
+        args: [tenderId],
+      });
+      await wait(finalizeHash, "Finalized encrypted selection");
+      return;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!message.includes("0x3c9f9aa6") || attempt === maxAttempts) {
+        throw error;
+      }
+      console.log(`Tender still open at finalize attempt ${attempt}; waiting 20s...`);
+      await new Promise((resolve) => setTimeout(resolve, 20_000));
+    }
+  }
+}
+
 async function main() {
   const buyer = accountFromEnv("BUYER_PRIVATE_KEY");
   const supplierA = accountFromEnv("SUPPLIER_A_PRIVATE_KEY");
@@ -246,75 +271,80 @@ async function main() {
   });
 
   try {
-    const nextTenderId = await publicClient.readContract({
-      address: contractAddress,
-      abi,
-      functionName: "nextTenderId",
-    });
-    const deadlineSeconds = Number(process.env.DEMO_DEADLINE_SECONDS || "90");
-    const deadline = BigInt(Math.floor(Date.now() / 1000) + deadlineSeconds);
-    const spec =
-      "Office laptops Q3: 30 developer laptops, 32GB RAM, three-year support, delivery before procurement close.";
-    const specHash = keccak256(toHex(spec));
+    const resumeTenderId = process.env.DEMO_RESUME_TENDER_ID ? BigInt(process.env.DEMO_RESUME_TENDER_ID) : null;
+    let tenderId;
 
-    const createHash = await buyerWallet.writeContract({
-      address: contractAddress,
-      abi,
-      functionName: "createTender",
-      args: ["Office laptops Q3", specHash, deadline, 1500n, true],
-    });
-    await wait(createHash, "Created tender");
+    if (resumeTenderId) {
+      tenderId = resumeTenderId;
+      console.log(`Resuming tender ID: ${tenderId}`);
+    } else {
+      const nextTenderId = await publicClient.readContract({
+        address: contractAddress,
+        abi,
+        functionName: "nextTenderId",
+      });
+      const deadlineSeconds = Number(process.env.DEMO_DEADLINE_SECONDS || "600");
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + deadlineSeconds);
+      const spec =
+        "Office laptops Q3: 30 developer laptops, 32GB RAM, three-year support, delivery before procurement close.";
+      const specHash = keccak256(toHex(spec));
 
-    const tenderId = nextTenderId;
+      const createHash = await buyerWallet.writeContract({
+        address: contractAddress,
+        abi,
+        functionName: "createTender",
+        args: ["Office laptops Q3", specHash, deadline, 1500n, true],
+      });
+      await wait(createHash, "Created tender");
+
+      tenderId = nextTenderId;
+    }
+
     console.log(`Tender ID: ${tenderId}`);
     console.log(`Buyer: ${buyer.address}`);
     console.log(`Supplier A: ${supplierA.address}`);
     console.log(`Supplier B: ${supplierB.address}`);
     console.log(`Supplier C: ${supplierC.address}`);
 
-    const approveHash = await buyerWallet.writeContract({
-      address: contractAddress,
-      abi,
-      functionName: "approveSuppliers",
-      args: [tenderId, supplierAddresses],
-    });
-    await wait(approveHash, "Approved suppliers");
-
-    const bidInputs = [
-      { wallet: supplierWallets[0], address: supplierA.address, price: 1200n, label: "Supplier A" },
-      { wallet: supplierWallets[1], address: supplierB.address, price: 980n, label: "Supplier B" },
-      { wallet: supplierWallets[2], address: supplierC.address, price: 1100n, label: "Supplier C" },
-    ];
-
-    for (const bid of bidInputs) {
-      const encrypted = await relayer.encrypt({
-        contractAddress,
-        userAddress: bid.address,
-        values: [{ type: "euint64", value: bid.price }],
-      });
-      const hash = await bid.wallet.writeContract({
+    if (!resumeTenderId) {
+      const approveHash = await buyerWallet.writeContract({
         address: contractAddress,
         abi,
-        functionName: "submitBid",
-        args: [tenderId, toHex(encrypted.handles[0], { size: 32 }), toHex(encrypted.inputProof)],
+        functionName: "approveSuppliers",
+        args: [tenderId, supplierAddresses],
       });
-      await wait(hash, `${bid.label} submitted encrypted bid`);
+      await wait(approveHash, "Approved suppliers");
+
+      const bidInputs = [
+        { wallet: supplierWallets[0], address: supplierA.address, price: 1200n, label: "Supplier A" },
+        { wallet: supplierWallets[1], address: supplierB.address, price: 980n, label: "Supplier B" },
+        { wallet: supplierWallets[2], address: supplierC.address, price: 1100n, label: "Supplier C" },
+      ];
+
+      for (const bid of bidInputs) {
+        const encrypted = await relayer.encrypt({
+          contractAddress,
+          userAddress: bid.address,
+          values: [{ type: "euint64", value: bid.price }],
+        });
+        const hash = await bid.wallet.writeContract({
+          address: contractAddress,
+          abi,
+          functionName: "submitBid",
+          args: [tenderId, toHex(encrypted.handles[0], { size: 32 }), toHex(encrypted.inputProof)],
+        });
+        await wait(hash, `${bid.label} submitted encrypted bid`);
+      }
+
+      const now = Math.floor(Date.now() / 1000);
+      const waitMs = Math.max(0, Number(deadline) - now + 4) * 1000;
+      if (waitMs > 0) {
+        console.log(`Waiting ${Math.ceil(waitMs / 1000)}s for the tender deadline...`);
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
+      }
     }
 
-    const now = Math.floor(Date.now() / 1000);
-    const waitMs = Math.max(0, Number(deadline) - now + 4) * 1000;
-    if (waitMs > 0) {
-      console.log(`Waiting ${Math.ceil(waitMs / 1000)}s for the tender deadline...`);
-      await new Promise((resolve) => setTimeout(resolve, waitMs));
-    }
-
-    const finalizeHash = await buyerWallet.writeContract({
-      address: contractAddress,
-      abi,
-      functionName: "finalizeTender",
-      args: [tenderId],
-    });
-    await wait(finalizeHash, "Finalized encrypted selection");
+    await finalizeWithRetry(buyerWallet, tenderId);
 
     const winnerIdHandle = await publicClient.readContract({
       address: contractAddress,
@@ -347,7 +377,10 @@ async function main() {
       startTimestamp,
       durationDays,
     );
-    const signature = await buyer.signTypedData(typedData);
+    const signature = await buyer.signTypedData({
+      ...typedData,
+      primaryType: typedData.primaryType || "UserDecryptRequestVerification",
+    });
     const decryptResult = await relayer.userDecrypt({
       handles: [winningBidHandle],
       contractAddress,
@@ -397,7 +430,10 @@ async function main() {
         startTimestamp,
         durationDays,
       );
-      const auditorSignature = await auditor.signTypedData(auditorTypedData);
+      const auditorSignature = await auditor.signTypedData({
+        ...auditorTypedData,
+        primaryType: auditorTypedData.primaryType || "UserDecryptRequestVerification",
+      });
       const auditorDecrypt = await relayer.userDecrypt({
         handles: [winningBidHandle],
         contractAddress,

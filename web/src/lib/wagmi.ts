@@ -1,9 +1,8 @@
 "use client";
 
 import { QueryClient } from "@tanstack/react-query";
-import { http, createConfig } from "wagmi";
-import { injected } from "wagmi/connectors";
-import { sepolia } from "wagmi/chains";
+import { createConfig, http } from "wagmi";
+import { sepolia } from "viem/chains";
 
 const rpcUrl =
   process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL ||
@@ -11,7 +10,6 @@ const rpcUrl =
 
 export const wagmiConfig = createConfig({
   chains: [sepolia],
-  connectors: [injected()],
   transports: {
     [sepolia.id]: http(rpcUrl),
   },

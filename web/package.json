@@ -9,18 +9,22 @@
     "lint": "eslint",
     "demo:wallets": "node scripts/create-demo-wallets.mjs",
     "seed:demo": "node scripts/seed-demo.mjs",
+    "verify:privy-integration": "node scripts/verify-privy-integration.mjs",
+    "verify:smart-account-decryption": "node scripts/verify-smart-account-decryption.mjs",
     "verify:demo": "node scripts/verify-demo.mjs",
     "verify:hosted": "node scripts/verify-hosted.mjs"
   },
   "dependencies": {
+    "@privy-io/react-auth": "^3.32.2",
     "@tanstack/react-query": "^5.101.0",
     "@zama-fhe/react-sdk": "^3.0.1",
     "@zama-fhe/sdk": "^3.0.1",
     "lucide-react": "^1.18.0",
     "next": "16.2.9",
+    "permissionless": "^0.2.57",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "viem": "^2.52.2",
+    "viem": "2.52.0",
     "wagmi": "^3.6.16"
   },
   "devDependencies": {

@@ -7,6 +7,20 @@ export const sepoliaExplorerBaseUrl = "https://sepolia.etherscan.io";
 
 export const blindProcureAbi = [
   {
+    type: "event",
+    name: "TenderCreated",
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: "tenderId", type: "uint256" },
+      { indexed: true, name: "buyer", type: "address" },
+      { indexed: false, name: "title", type: "string" },
+      { indexed: true, name: "specHash", type: "bytes32" },
+      { indexed: false, name: "deadline", type: "uint64" },
+      { indexed: false, name: "budgetCap", type: "uint64" },
+      { indexed: false, name: "whitelistEnabled", type: "bool" },
+    ],
+  },
+  {
     type: "function",
     name: "MAX_BIDS_PER_TENDER",
     stateMutability: "view",
@@ -158,3 +172,28 @@ export const blindProcureAbi = [
 
 export const isContractConfigured =
   blindProcureAddress !== "0x0000000000000000000000000000000000000000";
+
+export const zamaAclAbi = [
+  {
+    type: "function",
+    name: "delegateForUserDecryption",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "delegate", type: "address" },
+      { name: "contractAddress", type: "address" },
+      { name: "expirationDate", type: "uint64" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "getUserDecryptionDelegationExpirationDate",
+    stateMutability: "view",
+    inputs: [
+      { name: "delegator", type: "address" },
+      { name: "delegate", type: "address" },
+      { name: "contractAddress", type: "address" },
+    ],
+    outputs: [{ name: "expirationDate", type: "uint64" }],
+  },
+] as const;

@@ -19,7 +19,7 @@ SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
 BLINDPROCURE_ADDRESS=0x3801C32Fc2b61d9De992643825B80809Ac439443
 BUYER_PRIVATE_KEY=
 FUND_SUPPLIERS=true
-DEMO_DEADLINE_SECONDS=90
+DEMO_DEADLINE_SECONDS=600
 ```
 
 Either fill `BUYER_PRIVATE_KEY` locally or use the hidden runtime prompt. The seed script automatically loads `web/.env.demo-local` and `web/.env.demo-wallets` when they exist.

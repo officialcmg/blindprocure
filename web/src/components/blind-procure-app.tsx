@@ -1,12 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   CheckCircle2,
+  Check,
+  Copy,
   Eye,
   FileCheck2,
   KeyRound,
+  LogIn,
+  LogOut,
   Lock,
   Plus,
   RefreshCw,
@@ -16,30 +21,28 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
-  useAccount,
-  useChainId,
-  useConnect,
-  useDisconnect,
   usePublicClient,
   useReadContract,
   useReadContracts,
-  useSignTypedData,
-  useSwitchChain,
-  useWriteContract,
 } from "wagmi";
-import { sepolia } from "wagmi/chains";
-import { isAddress, keccak256, toHex, type Address, type Hex } from "viem";
+import { encodeFunctionData, isAddress, keccak256, parseEventLogs, toHex, type Address, type Hex } from "viem";
+import { sepolia } from "viem/chains";
 import {
   blindProcureAbi,
   blindProcureAddress,
   isContractConfigured,
   sepoliaExplorerBaseUrl,
+  zamaAclAbi,
 } from "@/lib/contract";
 import {
-  decryptWinningPrice,
+  decryptWinningPriceAsDelegate,
+  encryptedBidValue,
+  encryptedInputProof,
   encryptBidPrice,
   publicDecryptWinnerId,
+  zamaAclAddress,
 } from "@/lib/zama";
+import { usePrivyAccount } from "@/lib/privy-account";
 
 type TenderTuple = readonly [
   Address,
@@ -79,8 +82,42 @@ function specHashFor(text: string) {
 }
 
 async function waitForReceipt(publicClient: ReturnType<typeof usePublicClient>, tx: Hex) {
-  if (!publicClient) throw new Error("Wallet client is not ready.");
-  await publicClient.waitForTransactionReceipt({ hash: tx });
+  if (!publicClient) throw new Error("Sepolia client is not ready.");
+  let receipt;
+  try {
+    receipt = await publicClient.waitForTransactionReceipt({
+      hash: tx,
+      confirmations: 1,
+      timeout: 90_000,
+    });
+  } catch (error) {
+    const transaction = await publicClient.getTransaction({ hash: tx }).catch(() => null);
+    if (!transaction) {
+      throw new Error(
+        "Sepolia could not find this sponsored transaction. It was not broadcast; retry the action.",
+        { cause: error },
+      );
+    }
+
+    throw new Error("The transaction is still pending on Sepolia. Check its explorer page before retrying.", {
+      cause: error,
+    });
+  }
+
+  if (receipt.status !== "success") {
+    throw new Error("The transaction reverted on Sepolia. No tender was created.");
+  }
+
+  return receipt;
+}
+
+function actionErrorMessage(error: unknown, fallback: string) {
+  if (!(error instanceof Error)) return fallback;
+  const message = error.message;
+  if (/user rejected|rejected the request/i.test(message)) {
+    return "Transaction cancelled.";
+  }
+  return message;
 }
 
 function useNow(intervalMs = 1000) {
@@ -138,43 +175,52 @@ function useTenderSuppliers(tenderId: bigint, bidCount: number) {
   });
 }
 
-export function WalletConnect() {
-  const { address, isConnected } = useAccount();
-  const { connect, connectors, isPending } = useConnect();
-  const { disconnect } = useDisconnect();
-  const chainId = useChainId();
-  const { switchChain } = useSwitchChain();
-  const injected = connectors[0];
+export function AuthControls() {
+  const { ready, authenticated, accountReady, user, login, logout, smartAccountAddress } = usePrivyAccount();
+  const identity = user?.email?.address || user?.google?.email;
+  const [copied, setCopied] = useState(false);
+
+  async function copyAccountId() {
+    if (!smartAccountAddress) return;
+    await navigator.clipboard.writeText(smartAccountAddress);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
+  }
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {isConnected ? (
+      {authenticated ? (
         <>
           <span className="mono rounded border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-xs text-[var(--ink)]">
-            {shortAddress(address)}
+            {accountReady ? `${identity || "Signed in"} · ${shortAddress(smartAccountAddress)}` : "Preparing sponsored account..."}
           </span>
-          {chainId !== sepolia.id && (
+          {accountReady && (
             <button
-              className="rounded bg-[var(--danger)] px-3 py-2 text-sm font-semibold text-white"
-              onClick={() => switchChain({ chainId: sepolia.id })}
+              aria-label="Copy account ID"
+              className="grid h-9 w-9 place-items-center rounded border border-[var(--line)]"
+              data-account-id={smartAccountAddress}
+              onClick={copyAccountId}
+              title={smartAccountAddress}
             >
-              Switch to Sepolia
+              {copied ? <Check size={16} /> : <Copy size={16} />}
             </button>
           )}
           <button
-            className="rounded border border-[var(--line)] px-3 py-2 text-sm"
-            onClick={() => disconnect()}
+            aria-label="Sign out"
+            className="grid h-9 w-9 place-items-center rounded border border-[var(--line)]"
+            onClick={() => logout()}
+            title="Sign out"
           >
-            Disconnect
+            <LogOut size={16} />
           </button>
         </>
       ) : (
         <button
-          className="rounded bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white"
-          disabled={!injected || isPending}
-          onClick={() => connect({ connector: injected })}
+          className="inline-flex items-center gap-2 rounded bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white"
+          disabled={!ready}
+          onClick={() => login({ loginMethods: ["email", "google"] })}
         >
-          Connect wallet
+          <LogIn size={16} /> Sign in
         </button>
       )}
     </div>
@@ -194,7 +240,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             <span className="block text-sm text-[var(--muted)]">Confidential supplier bidding</span>
           </span>
         </Link>
-        <WalletConnect />
+        <AuthControls />
       </header>
       {children}
     </main>
@@ -368,27 +414,67 @@ function TenderListCard({ tenderId, tender, nowMs }: { tenderId: bigint; tender:
 }
 
 export function CreateTenderPage() {
-  const { address, isConnected } = useAccount();
+  const router = useRouter();
+  const { authenticated, accountReady, smartAccountAddress: address, sendCall, login } = usePrivyAccount();
   const publicClient = usePublicClient();
-  const { writeContractAsync } = useWriteContract();
   const [title, setTitle] = useState("Office laptops Q3");
   const [spec, setSpec] = useState(demoSpec);
   const [budget, setBudget] = useState("1500");
-  const [minutes, setMinutes] = useState("5");
+  const [minutes, setMinutes] = useState("90");
   const [status, setStatus] = useState<TxStatus | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function createTender() {
     if (!address) return;
-    const deadline = BigInt(Math.floor(Date.now() / 1000) + Number(minutes) * 60);
-    const tx = await writeContractAsync({
-      address: blindProcureAddress,
-      abi: blindProcureAbi,
-      functionName: "createTender",
-      args: [title, specHashFor(spec), deadline, BigInt(budget), true],
-    });
-    setStatus({ label: "Creating tender...", tx, tone: "pending" });
-    await waitForReceipt(publicClient, tx);
-    setStatus({ label: "Tender created.", tx, tone: "ok" });
+    let tx: Hex | undefined;
+    setIsSubmitting(true);
+    setStatus({ label: "Preparing Sepolia transaction...", tone: "pending" });
+
+    try {
+      if (!publicClient) throw new Error("Sepolia RPC client is not ready.");
+
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + Number(minutes) * 60);
+      const args = [title, specHashFor(spec), deadline, BigInt(budget), true] as const;
+
+      await publicClient.simulateContract({
+        account: address,
+        address: blindProcureAddress,
+        abi: blindProcureAbi,
+        functionName: "createTender",
+        args,
+      });
+
+      const data = encodeFunctionData({
+        abi: blindProcureAbi,
+        functionName: "createTender",
+        args,
+      });
+      tx = await sendCall({
+        to: blindProcureAddress,
+        data,
+        description: "Create confidential tender",
+      });
+      setStatus({ label: "Creating tender on Sepolia...", tx, tone: "pending" });
+
+      const receipt = await waitForReceipt(publicClient, tx);
+      const [created] = parseEventLogs({
+        abi: blindProcureAbi,
+        eventName: "TenderCreated",
+        logs: receipt.logs,
+      });
+      if (!created) throw new Error("Tender transaction confirmed, but its creation event was not found.");
+
+      setStatus({ label: `Tender #${created.args.tenderId} created.`, tx, tone: "ok" });
+      router.push(`/tenders/${created.args.tenderId}`);
+    } catch (error) {
+      setStatus({
+        label: actionErrorMessage(error, "Tender creation failed."),
+        tx,
+        tone: "error",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -398,7 +484,15 @@ export function CreateTenderPage() {
         <p className="mt-2 text-[var(--muted)]">Metadata is public. Supplier prices stay encrypted.</p>
         <div className="mt-6 grid gap-4 rounded border border-[var(--line)] bg-[var(--panel)] p-5">
           {!isContractConfigured && <Notice tone="error">Set `NEXT_PUBLIC_BLINDPROCURE_ADDRESS` before creating tenders.</Notice>}
-          {!isConnected && <Notice>Connect the buyer wallet to create the tender.</Notice>}
+          {!authenticated && (
+            <Notice>
+              <button className="font-semibold text-[var(--accent)] underline" onClick={() => login({ loginMethods: ["email", "google"] })}>
+                Sign in
+              </button>{" "}
+              to create a tender. Transactions are sponsored.
+            </Notice>
+          )}
+          {authenticated && !accountReady && <Notice>Preparing your sponsored account...</Notice>}
           <label className="grid gap-2 text-sm font-medium">
             Tender title
             <input className="rounded border border-[var(--line)] bg-white px-3 py-2" value={title} onChange={(event) => setTitle(event.target.value)} />
@@ -417,8 +511,8 @@ export function CreateTenderPage() {
               <input className="rounded border border-[var(--line)] bg-white px-3 py-2" inputMode="numeric" value={minutes} onChange={(event) => setMinutes(event.target.value.replace(/\D/g, ""))} />
             </label>
           </div>
-          <ActionButton disabled={!isConnected || !isContractConfigured || !title || !budget || !minutes} onClick={createTender}>
-            <Plus size={16} /> Create public tender
+          <ActionButton disabled={!accountReady || !isContractConfigured || !title || !budget || !minutes || isSubmitting} onClick={createTender}>
+            <Plus size={16} /> {isSubmitting ? "Creating tender..." : "Create public tender"}
           </ActionButton>
           <TxToast status={status} />
         </div>
@@ -455,12 +549,15 @@ export function DemoPage() {
 
 export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
   const nowMs = useNow();
-  const { address, isConnected } = useAccount();
-  const chainId = useChainId();
+  const {
+    authenticated,
+    accountReady,
+    smartAccountAddress: address,
+    embeddedWalletAddress,
+    sendCall,
+    signAsEmbeddedWallet,
+  } = usePrivyAccount();
   const publicClient = usePublicClient();
-  const { switchChain } = useSwitchChain();
-  const { signTypedDataAsync } = useSignTypedData();
-  const { writeContractAsync } = useWriteContract();
   const nextTenderIdRead = useReadContract({
     address: blindProcureAddress,
     abi: blindProcureAbi,
@@ -474,11 +571,33 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
   const bidCount = tenderExists && tender ? Number(tender[6]) : 0;
   const suppliers = useTenderSuppliers(tenderId, bidCount);
   const [supplierInput, setSupplierInput] = useState("");
-  const [bidPrice, setBidPrice] = useState("");
+  const [bidPriceState, setBidPriceState] = useState<{ account?: Address; value: string }>({ value: "" });
   const [auditorInput, setAuditorInput] = useState("");
-  const [decryptedPrice, setDecryptedPrice] = useState<string | null>(null);
+  const [decryptedPriceState, setDecryptedPriceState] = useState<{ account: Address; value: string } | null>(null);
   const [publicWinnerId, setPublicWinnerId] = useState<string | null>(null);
-  const [status, setStatus] = useState<TxStatus | null>(null);
+  const [statusState, setStatusState] = useState<{ account: Address; value: TxStatus } | null>(null);
+  const [isActing, setIsActing] = useState(false);
+
+  const bidPrice =
+    address && bidPriceState.account?.toLowerCase() === address.toLowerCase() ? bidPriceState.value : "";
+  const decryptedPrice =
+    address && decryptedPriceState?.account.toLowerCase() === address.toLowerCase()
+      ? decryptedPriceState.value
+      : null;
+  const status =
+    address && statusState?.account.toLowerCase() === address.toLowerCase() ? statusState.value : null;
+
+  function setBidPrice(value: string) {
+    setBidPriceState({ account: address, value });
+  }
+
+  function setDecryptedPrice(value: string | null) {
+    setDecryptedPriceState(value && address ? { account: address, value } : null);
+  }
+
+  function setStatus(value: TxStatus | null) {
+    setStatusState(value && address ? { account: address, value } : null);
+  }
 
   const isBuyer = Boolean(address && tenderExists && tender && address.toLowerCase() === tender[0].toLowerCase());
   const isClosed = tenderExists && tender ? nowMs >= Number(tender[3]) * 1000 : false;
@@ -511,30 +630,27 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
     [suppliers.data],
   );
 
-  async function ensureSepolia() {
-    if (chainId !== sepolia.id) {
-      switchChain({ chainId: sepolia.id });
-      throw new Error("Switch to Sepolia and retry the action.");
-    }
+  function requireAccount() {
+    if (!accountReady || !address) throw new Error("Sign in and wait for your sponsored account to be ready.");
   }
 
   async function approveSupplier() {
-    await ensureSepolia();
+    requireAccount();
     if (!isAddress(supplierInput)) throw new Error("Enter a valid supplier address.");
-    const tx = await writeContractAsync({
-      address: blindProcureAddress,
+    const data = encodeFunctionData({
       abi: blindProcureAbi,
       functionName: "approveSupplier",
       args: [tenderId, supplierInput as Address],
     });
+    const tx = await sendCall({ to: blindProcureAddress, data, description: "Approve supplier" });
     setStatus({ label: "Approving supplier...", tx, tone: "pending" });
     await waitForReceipt(publicClient, tx);
     setStatus({ label: "Supplier approved.", tx, tone: "ok" });
   }
 
   async function submitEncryptedBid() {
-    await ensureSepolia();
-    if (!address) throw new Error("Connect a supplier wallet.");
+    requireAccount();
+    if (!address) throw new Error("Your sponsored account is still being prepared.");
     const price = BigInt(bidPrice);
     const encrypted = await encryptBidPrice({
       contractAddress: blindProcureAddress,
@@ -542,12 +658,12 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
       price,
       getChainId,
     });
-    const tx = await writeContractAsync({
-      address: blindProcureAddress,
+    const data = encodeFunctionData({
       abi: blindProcureAbi,
       functionName: "submitBid",
-      args: [tenderId, toHex(encrypted.handles[0], { size: 32 }), toHex(encrypted.inputProof)],
+      args: [tenderId, encryptedBidValue(encrypted), encryptedInputProof(encrypted)],
     });
+    const tx = await sendCall({ to: blindProcureAddress, data, description: "Submit encrypted bid" });
     setBidPrice("");
     setStatus({ label: "Submitting encrypted bid...", tx, tone: "pending" });
     await waitForReceipt(publicClient, tx);
@@ -555,20 +671,20 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
   }
 
   async function finalizeTender() {
-    await ensureSepolia();
-    const tx = await writeContractAsync({
-      address: blindProcureAddress,
+    requireAccount();
+    const data = encodeFunctionData({
       abi: blindProcureAbi,
       functionName: "finalizeTender",
       args: [tenderId],
     });
+    const tx = await sendCall({ to: blindProcureAddress, data, description: "Finalize confidential tender" });
     setStatus({ label: "Finalizing encrypted winner selection...", tx, tone: "pending" });
     await waitForReceipt(publicClient, tx);
     setStatus({ label: "Tender finalized.", tx, tone: "ok" });
   }
 
   async function revealWinner() {
-    await ensureSepolia();
+    requireAccount();
     const handle = await publicClient?.readContract({
       address: blindProcureAddress,
       abi: blindProcureAbi,
@@ -579,20 +695,20 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
     const result = await publicDecryptWinnerId({ handle: handle as Hex, getChainId });
     const clearValue = result.clearValues[handle as Hex];
     setPublicWinnerId(String(clearValue));
-    const tx = await writeContractAsync({
-      address: blindProcureAddress,
+    const data = encodeFunctionData({
       abi: blindProcureAbi,
       functionName: "recordWinnerFromProof",
       args: [tenderId, result.abiEncodedClearValues, result.decryptionProof],
     });
+    const tx = await sendCall({ to: blindProcureAddress, data, description: "Record proof-verified winner" });
     setStatus({ label: "Recording proof-verified winner...", tx, tone: "pending" });
     await waitForReceipt(publicClient, tx);
     setStatus({ label: "Winner identity recorded.", tx, tone: "ok" });
   }
 
   async function decryptPrice() {
-    await ensureSepolia();
-    if (!address) throw new Error("Connect an authorized buyer or auditor wallet.");
+    requireAccount();
+    if (!address || !embeddedWalletAddress) throw new Error("Your private signer is still being prepared.");
     const handle = await publicClient?.readContract({
       address: blindProcureAddress,
       abi: blindProcureAbi,
@@ -600,32 +716,73 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
       args: [tenderId],
     });
     if (!handle) throw new Error("Winning bid handle is not ready.");
-    const value = await decryptWinningPrice({
-      contractAddress: blindProcureAddress,
-      handle: handle as Hex,
-      account: address,
-      signTypedData: (typedData) => signTypedDataAsync(typedData as never),
-      getChainId,
+
+    if (!publicClient) throw new Error("Sepolia RPC client is not ready.");
+    const currentExpiry = await publicClient.readContract({
+      address: zamaAclAddress,
+      abi: zamaAclAbi,
+      functionName: "getUserDecryptionDelegationExpirationDate",
+      args: [address, embeddedWalletAddress, blindProcureAddress],
     });
-    setDecryptedPrice(String(value));
+    if (currentExpiry <= BigInt(Math.floor(Date.now() / 1000) + 300)) {
+      const expiration = BigInt(Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60);
+      const delegationData = encodeFunctionData({
+        abi: zamaAclAbi,
+        functionName: "delegateForUserDecryption",
+        args: [embeddedWalletAddress, blindProcureAddress, expiration],
+      });
+      const delegationTx = await sendCall({
+        to: zamaAclAddress,
+        data: delegationData,
+        description: "Enable private result access",
+      });
+      setStatus({ label: "Enabling private result access...", tx: delegationTx, tone: "pending" });
+      await waitForReceipt(publicClient, delegationTx);
+    }
+
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= 12; attempt += 1) {
+      try {
+        const value = await decryptWinningPriceAsDelegate({
+          contractAddress: blindProcureAddress,
+          handle: handle as Hex,
+          delegatorAddress: address,
+          delegateAddress: embeddedWalletAddress,
+          signTypedData: (typedData) => signAsEmbeddedWallet(typedData as never),
+          getChainId,
+        });
+        setDecryptedPrice(String(value));
+        setStatus({ label: "Winning price decrypted privately.", tone: "ok" });
+        return;
+      } catch (error) {
+        lastError = error;
+        if (attempt === 12 || currentExpiry > BigInt(Math.floor(Date.now() / 1000) + 300)) break;
+        setStatus({ label: `Synchronizing private access (${attempt}/12)...`, tone: "pending" });
+        await new Promise((resolve) => window.setTimeout(resolve, 15_000));
+      }
+    }
+
+    throw lastError || new Error("Private decryption was not available.");
   }
 
   async function grantAuditor() {
-    await ensureSepolia();
+    requireAccount();
     if (!isAddress(auditorInput)) throw new Error("Enter a valid auditor address.");
-    const tx = await writeContractAsync({
-      address: blindProcureAddress,
+    const data = encodeFunctionData({
       abi: blindProcureAbi,
       functionName: "grantAuditorAccess",
       args: [tenderId, auditorInput as Address],
     });
+    const tx = await sendCall({ to: blindProcureAddress, data, description: "Grant auditor access" });
     setStatus({ label: "Granting auditor access...", tx, tone: "pending" });
     await waitForReceipt(publicClient, tx);
     setStatus({ label: "Auditor can decrypt the winning price.", tx, tone: "ok" });
   }
 
   async function run(action: () => Promise<void>) {
+    if (isActing) return;
     try {
+      setIsActing(true);
       setStatus({ label: "Preparing action...", tone: "pending" });
       await action();
       await tenderRead.refetch();
@@ -633,7 +790,9 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
       await currentUserApproval.refetch();
       await currentUserBid.refetch();
     } catch (error) {
-      setStatus({ label: error instanceof Error ? error.message : "Action failed.", tone: "error" });
+      setStatus({ label: actionErrorMessage(error, "Action failed."), tone: "error" });
+    } finally {
+      setIsActing(false);
     }
   }
 
@@ -641,6 +800,8 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
     <Shell>
       <section className="py-8">
         {!isContractConfigured && <Notice tone="error">Set `NEXT_PUBLIC_BLINDPROCURE_ADDRESS` before using the live app.</Notice>}
+        {!authenticated && <Notice>Sign in with email or Google to take part. Transaction fees are sponsored.</Notice>}
+        {authenticated && !accountReady && <Notice>Preparing your sponsored account...</Notice>}
         {(nextTenderIdRead.isLoading || (existsByCounter !== false && tenderRead.isLoading)) && (
           <Notice>Loading tender state...</Notice>
         )}
@@ -699,7 +860,7 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                       </div>
                     </div>
                     {publicWinnerId && <Notice tone="ok">Publicly decrypted winning bid ID: {publicWinnerId}</Notice>}
-                    <ActionButton disabled={!tender[7] || winnerRecorded || !isConnected} onClick={() => run(revealWinner)}>
+                    <ActionButton disabled={!tender[7] || winnerRecorded || !accountReady || isActing} onClick={() => run(revealWinner)}>
                       <Eye size={16} /> Reveal winner identity
                     </ActionButton>
                   </div>
@@ -711,14 +872,14 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                   <div className="grid gap-3">
                     <input
                       className="rounded border border-[var(--line)] bg-white px-3 py-2 text-sm"
-                      placeholder="Supplier address to approve"
+                      placeholder="Supplier account ID"
                       value={supplierInput}
                       onChange={(event) => setSupplierInput(event.target.value)}
                     />
-                    <ActionButton disabled={!isBuyer || tender[6] > 0 || !supplierInput} onClick={() => run(approveSupplier)}>
+                    <ActionButton disabled={!isBuyer || tender[6] > 0 || !supplierInput || isActing} onClick={() => run(approveSupplier)}>
                       <CheckCircle2 size={16} /> Approve supplier
                     </ActionButton>
-                    <ActionButton disabled={!isBuyer || !isClosed || tender[7]} onClick={() => run(finalizeTender)}>
+                    <ActionButton disabled={!isBuyer || !isClosed || tender[7] || isActing} onClick={() => run(finalizeTender)}>
                       <RefreshCw size={16} /> Finalize encrypted selection
                     </ActionButton>
                   </div>
@@ -728,8 +889,8 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                   <div className="grid gap-3">
                     <Notice tone={currentUserApproval.data ? "ok" : "info"}>
                       {currentUserApproval.data
-                        ? "This wallet is approved for the tender."
-                        : "Connect an approved supplier wallet before bidding."}
+                        ? "Your account is approved for this tender."
+                        : "Sign in with an approved supplier account before bidding."}
                     </Notice>
                     <input
                       className="rounded border border-[var(--line)] bg-white px-3 py-2 text-sm"
@@ -739,28 +900,28 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                       onChange={(event) => setBidPrice(event.target.value.replace(/\D/g, ""))}
                     />
                     <ActionButton
-                      disabled={!isConnected || !currentUserApproval.data || Boolean(currentUserBid.data) || !bidPrice || tender[7] || isClosed}
+                      disabled={!accountReady || !currentUserApproval.data || Boolean(currentUserBid.data) || !bidPrice || tender[7] || isClosed || isActing}
                       onClick={() => run(submitEncryptedBid)}
                     >
                       <Lock size={16} /> Encrypt and submit bid
                     </ActionButton>
-                    {currentUserBid.data && <Notice tone="ok">This wallet has already submitted an encrypted bid.</Notice>}
+                    {currentUserBid.data && <Notice tone="ok">Your account has already submitted an encrypted bid.</Notice>}
                   </div>
                 </Panel>
 
                 <Panel icon={<KeyRound size={18} />} title="Selective price access">
                   <div className="grid gap-3">
-                    <ActionButton disabled={!tender[7] || !isConnected} onClick={() => run(decryptPrice)}>
+                    <ActionButton disabled={!tender[7] || !accountReady || isActing} onClick={() => run(decryptPrice)}>
                       <KeyRound size={16} /> Decrypt winning price
                     </ActionButton>
                     {decryptedPrice && <Notice tone="ok">Winning price: {decryptedPrice}</Notice>}
                     <input
                       className="rounded border border-[var(--line)] bg-white px-3 py-2 text-sm"
-                      placeholder="Auditor address"
+                      placeholder="Auditor account ID"
                       value={auditorInput}
                       onChange={(event) => setAuditorInput(event.target.value)}
                     />
-                    <ActionButton disabled={!isBuyer || !tender[7] || !auditorInput} onClick={() => run(grantAuditor)}>
+                    <ActionButton disabled={!isBuyer || !tender[7] || !auditorInput || isActing} onClick={() => run(grantAuditor)}>
                       <UsersRound size={16} /> Grant auditor access
                     </ActionButton>
                   </div>
