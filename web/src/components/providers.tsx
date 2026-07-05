@@ -28,10 +28,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   if (!appId) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#f5f2eb] px-6 text-[#171714]">
-        <div className="max-w-lg border border-[#d8d0c0] bg-white p-6">
-          <h1 className="text-xl font-semibold">Privy configuration required</h1>
-          <p className="mt-2 text-sm leading-6 text-[#6d6a62]">
+      <main className="grid min-h-screen place-items-center bg-[var(--background)] px-6 text-[var(--foreground)]">
+        <div className="max-w-lg rounded-lg border border-[var(--line)] bg-white p-6 shadow-sm">
+          <h1 className="text-xl font-semibold tracking-tight">Privy configuration required</h1>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
             Set NEXT_PUBLIC_PRIVY_APP_ID to start BlindProcure.
           </p>
         </div>
@@ -41,10 +41,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   if (!mounted) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#f5f2eb] px-6 text-[#171714]">
-        <div className="max-w-lg border border-[#d8d0c0] bg-white p-6">
-          <h1 className="text-xl font-semibold">BlindProcure</h1>
-          <p className="mt-2 text-sm leading-6 text-[#6d6a62]">Preparing secure account access...</p>
+      <main className="grid min-h-screen place-items-center bg-[var(--background)] px-6 text-[var(--foreground)]">
+        <div className="flex max-w-lg items-center gap-3 rounded-lg border border-[var(--line)] bg-white p-6 shadow-sm">
+          <span
+            aria-hidden
+            className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--line)] border-t-[var(--accent)]"
+          />
+          <div>
+            <h1 className="text-base font-semibold tracking-tight">BlindProcure</h1>
+            <p className="mt-0.5 text-sm leading-6 text-[var(--muted)]">Preparing secure account access...</p>
+          </div>
         </div>
       </main>
     );
@@ -60,7 +66,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         defaultChain: sepolia,
         appearance: {
           theme: "light",
-          accentColor: "#147d74",
+          accentColor: "#0f766e",
           showWalletLoginFirst: false,
         },
         embeddedWallets: {

@@ -1,23 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4f0e8;
-  --foreground: #171512;
-  --muted: #6f6a60;
-  --panel: #fffaf1;
-  --panel-strong: #f7efe1;
-  --line: #ded2bd;
+  --background: #f5f2ea;
+  --foreground: #1b1813;
+  --muted: #6c675c;
+  --panel: #fffdf7;
+  --panel-strong: #f6efe0;
+  --line: #ddd3bf;
+  --line-strong: #c9bda3;
   --accent: #0f766e;
   --accent-strong: #115e59;
-  --ink: #25302d;
+  --accent-soft: #e7f5f2;
+  --ink: #232d2a;
   --danger: #a33d2e;
+  --danger-soft: #fdf1ee;
+  --danger-line: #e0b3a8;
+  --warn: #8a5b00;
+  --warn-soft: #fdf4de;
+  --warn-line: #e4cf9b;
+  --ok: #115e59;
+  --ok-soft: #e9f8f4;
+  --ok-line: #a4d4cc;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+  --font-sans: var(--font-geist), "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, monospace;
 }
 
 * {
@@ -27,16 +37,19 @@
 html {
   min-height: 100%;
   background: var(--background);
+  scroll-behavior: smooth;
 }
 
 body {
   min-height: 100%;
   margin: 0;
   background:
-    linear-gradient(180deg, rgba(255, 250, 241, 0.7), rgba(244, 240, 232, 0) 320px),
+    linear-gradient(180deg, rgba(255, 253, 247, 0.75), rgba(245, 242, 234, 0) 360px),
     var(--background);
   color: var(--foreground);
-  font-family: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-geist), "Geist", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button,
@@ -45,11 +58,62 @@ textarea {
   font: inherit;
 }
 
+button {
+  cursor: pointer;
+}
+
 button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }
 
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+input,
+textarea {
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+}
+
 .mono {
-  font-family: "Geist Mono", "Geist Mono Fallback", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-geist-mono), "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toast-enter {
+  animation: toast-in 160ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .toast-enter {
+    animation: none;
+  }
 }
