@@ -416,26 +416,26 @@ export function HomePage() {
             </Link>
           </nav>
         </header>
-        <div className="flex flex-1 flex-col justify-center py-8">
-          <div className="mb-8 flex flex-wrap gap-3">
+        <div className="flex flex-1 flex-col justify-center py-4">
+          <div className="mb-6 flex flex-wrap gap-3">
             {["Zama FHEVM", "Sepolia", "Sealed-bid"].map((tag) => (
               <span key={tag} className="inline-block border-2 border-[var(--ink)] px-3 py-1 text-xs font-bold uppercase tracking-[0.2em]">
                 {tag}
               </span>
             ))}
           </div>
-          <h1 className="text-[15vw] font-black uppercase leading-[0.85] tracking-tighter sm:text-[11vw]">
+          <h1 className="text-[min(15vw,11svh)] font-black uppercase leading-[0.85] tracking-tighter sm:text-[min(11vw,14svh)]">
             Bids are
             <br />
             <span className="inline-block bg-[var(--ink)] px-3 text-[var(--acid)]">nobody&apos;s</span>
             <br />
             business.
           </h1>
-          <p className="mt-8 max-w-xl text-lg font-medium leading-7">
+          <p className="mt-6 max-w-xl text-lg font-medium leading-7">
             Procurement without public bid leakage. Sealed-bid tenders on Ethereum: the smart
             contract picks the cheapest valid offer without ever seeing a single price.
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-4">
+          <div className="mt-6 flex flex-wrap items-center gap-4">
             <Link
               className="inline-flex items-center gap-3 border-4 border-[var(--ink)] bg-[var(--ink)] px-8 py-4 text-base font-black uppercase tracking-tight text-[var(--acid)] transition hover:-translate-y-1"
               href="/app"
@@ -1412,96 +1412,110 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
 
             <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
               <div className="grid gap-5">
-                <Panel
-                  icon={<ShieldCheck size={16} />}
-                  title="Buyer actions"
-                  subtitle="Approve suppliers while bidding is open, then finalize after the deadline."
-                >
-                  <div className="grid gap-4">
-                    {!isBuyer && (
-                      <Notice>
-                        Only the buyer address can approve suppliers, finalize the tender, or grant auditor access.
-                      </Notice>
-                    )}
-                    <div className="grid gap-3 border-2 border-[var(--ink)] bg-white p-4">
-                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wide">
-                        <Mail aria-hidden size={14} strokeWidth={2.5} className="text-[var(--ink)]" /> Approve supplier by email
-                      </div>
-                      <p className="text-xs leading-5 text-[var(--muted)]">
-                        The email resolves to the supplier&apos;s smart account via Privy. Approvals lock once the
-                        first bid arrives.
-                      </p>
-                      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-                        <label className="sr-only" htmlFor="supplier-email">
-                          Supplier email
-                        </label>
-                        <input
-                          id="supplier-email"
-                          type="email"
-                          className="border-2 border-[var(--ink)] bg-white px-3.5 py-2.5 text-sm"
-                          placeholder="supplier@company.com"
-                          value={supplierEmailInput}
-                          onChange={(event) => setSupplierEmailInput(event.target.value)}
-                        />
-                        <ActionButton
-                          disabled={!isBuyer || tender[6] > 0 || !supplierEmailIsValid || isActing}
-                          onClick={() => run(approveSupplierEmail)}
-                        >
-                          <SearchCheck aria-hidden size={16} /> Approve
-                        </ActionButton>
-                      </div>
-                      {resolvedSupplierState && (
-                        <Notice tone="ok">
-                          {resolvedSupplierState.email} resolves to {shortAddress(resolvedSupplierState.address)}.
+                {!tender[7] && (
+                  <Panel
+                    icon={<ShieldCheck size={16} />}
+                    title="Buyer actions"
+                    subtitle={
+                      isClosed
+                        ? "Bidding is closed. Finalize to run the encrypted winner selection."
+                        : "Approve suppliers while bidding is open, then finalize after the deadline."
+                    }
+                  >
+                    <div className="grid gap-4">
+                      {!isBuyer && (
+                        <Notice>
+                          Only the buyer address can approve suppliers, finalize the tender, or grant auditor access.
                         </Notice>
                       )}
-                      {supplierEmailInput && !supplierEmailIsValid && (
-                        <Notice tone="error">Enter a valid supplier email address.</Notice>
+                      {!isClosed && tender[6] === 0 && (
+                        <>
+                          <div className="grid gap-3 border-2 border-[var(--ink)] bg-white p-4">
+                            <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wide">
+                              <Mail aria-hidden size={14} strokeWidth={2.5} className="text-[var(--ink)]" /> Approve supplier by email
+                            </div>
+                            <p className="text-xs leading-5 text-[var(--muted)]">
+                              The email resolves to the supplier&apos;s smart account via Privy. Approvals lock once the
+                              first bid arrives.
+                            </p>
+                            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                              <label className="sr-only" htmlFor="supplier-email">
+                                Supplier email
+                              </label>
+                              <input
+                                id="supplier-email"
+                                type="email"
+                                className="border-2 border-[var(--ink)] bg-white px-3.5 py-2.5 text-sm"
+                                placeholder="supplier@company.com"
+                                value={supplierEmailInput}
+                                onChange={(event) => setSupplierEmailInput(event.target.value)}
+                              />
+                              <ActionButton
+                                disabled={!isBuyer || !supplierEmailIsValid || isActing}
+                                onClick={() => run(approveSupplierEmail)}
+                              >
+                                <SearchCheck aria-hidden size={16} /> Approve
+                              </ActionButton>
+                            </div>
+                            {resolvedSupplierState && (
+                              <Notice tone="ok">
+                                {resolvedSupplierState.email} resolves to {shortAddress(resolvedSupplierState.address)}.
+                              </Notice>
+                            )}
+                            {supplierEmailInput && !supplierEmailIsValid && (
+                              <Notice tone="error">Enter a valid supplier email address.</Notice>
+                            )}
+                          </div>
+                          <div className="grid gap-3 border-2 border-[var(--ink)] bg-white p-4">
+                            <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wide">
+                              <Wallet aria-hidden size={14} strokeWidth={2.5} className="text-[var(--ink)]" /> Approve supplier by wallet address
+                            </div>
+                            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                              <label className="sr-only" htmlFor="supplier-address">
+                                Supplier wallet address
+                              </label>
+                              <input
+                                id="supplier-address"
+                                className="mono border-2 border-[var(--ink)] bg-white px-3.5 py-2.5 text-sm"
+                                placeholder="0x..."
+                                value={supplierInput}
+                                onChange={(event) => setSupplierInput(event.target.value)}
+                              />
+                              <ActionButton
+                                disabled={!isBuyer || !supplierAddressIsValid || isActing}
+                                onClick={() => run(approveSupplier)}
+                              >
+                                <CheckCircle2 aria-hidden size={16} /> Approve
+                              </ActionButton>
+                            </div>
+                            {supplierInput && !supplierAddressIsValid && (
+                              <Notice tone="error">Enter a valid 0x supplier address.</Notice>
+                            )}
+                          </div>
+                        </>
                       )}
-                    </div>
-                    <div className="grid gap-3 border-2 border-[var(--ink)] bg-white p-4">
-                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wide">
-                        <Wallet aria-hidden size={14} strokeWidth={2.5} className="text-[var(--ink)]" /> Approve supplier by wallet address
-                      </div>
-                      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-                        <label className="sr-only" htmlFor="supplier-address">
-                          Supplier wallet address
-                        </label>
-                        <input
-                          id="supplier-address"
-                          className="mono border-2 border-[var(--ink)] bg-white px-3.5 py-2.5 text-sm"
-                          placeholder="0x..."
-                          value={supplierInput}
-                          onChange={(event) => setSupplierInput(event.target.value)}
-                        />
-                        <ActionButton
-                          disabled={!isBuyer || tender[6] > 0 || !supplierAddressIsValid || isActing}
-                          onClick={() => run(approveSupplier)}
-                        >
-                          <CheckCircle2 aria-hidden size={16} /> Approve
+                      {!isClosed && tender[6] > 0 && (
+                        <Notice>
+                          Supplier approvals are locked: the first encrypted bid has arrived. The whitelist froze the
+                          moment bidding started.
+                        </Notice>
+                      )}
+                      <div className="grid gap-3 border-2 border-[var(--ink)] bg-white p-4">
+                        <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wide">
+                          <Gavel aria-hidden size={14} strokeWidth={2.5} className="text-[var(--ink)]" /> Finalize selection
+                        </div>
+                        <p className="text-xs leading-5 text-[var(--muted)]">
+                          {isClosed
+                            ? "Finalizing asks the contract to compare encrypted bids and select the lowest valid one."
+                            : "Available once the bidding deadline passes."}
+                        </p>
+                        <ActionButton disabled={!isBuyer || !isClosed || isActing} onClick={() => run(finalizeTender)}>
+                          <Gavel aria-hidden size={16} /> Finalize selection
                         </ActionButton>
                       </div>
-                      {supplierInput && !supplierAddressIsValid && (
-                        <Notice tone="error">Enter a valid 0x supplier address.</Notice>
-                      )}
                     </div>
-                    <div className="grid gap-3 border-2 border-[var(--ink)] bg-white p-4">
-                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wide">
-                        <Gavel aria-hidden size={14} strokeWidth={2.5} className="text-[var(--ink)]" /> Finalize selection
-                      </div>
-                      <p className="text-xs leading-5 text-[var(--muted)]">
-                        {tender[7]
-                          ? "This tender is finalized. The contract has selected the lowest valid bid."
-                          : isClosed
-                            ? "Bidding is closed. Finalizing asks the contract to compare encrypted bids and select the lowest valid one."
-                            : "Available once the bidding deadline passes."}
-                      </p>
-                      <ActionButton disabled={!isBuyer || !isClosed || tender[7] || isActing} onClick={() => run(finalizeTender)}>
-                        <Gavel aria-hidden size={16} /> {tender[7] ? "Selection finalized" : "Finalize selection"}
-                      </ActionButton>
-                    </div>
-                  </div>
-                </Panel>
+                  </Panel>
+                )}
 
                 <Panel
                   icon={<UsersRound size={16} />}
@@ -1533,169 +1547,193 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                           </tr>
                         </thead>
                         <tbody>
-                          {submittedSuppliers.map((row) => (
-                            <tr key={row.bidId} className="border-b border-[var(--ink)]/20 last:border-b-0">
-                              <td className="mono px-3.5 py-3 text-xs font-medium">#{row.bidId}</td>
-                              <td className="mono min-w-0 break-all px-3.5 py-3 text-xs text-[var(--muted)]">
-                                {row.supplier}
-                              </td>
-                              <td className="px-3.5 py-3">
-                                <span className="inline-flex items-center gap-1.5 border-2 border-[var(--ink)] bg-[var(--panel-strong)] px-2.5 py-0.5 text-xs font-bold uppercase text-[var(--ink)]">
-                                  <Lock aria-hidden size={11} /> Encrypted
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
+                          {submittedSuppliers.map((row) => {
+                            const isWinnerRow =
+                              winnerRecorded && winner && winner !== zeroAddress && row.supplier?.toLowerCase() === winner.toLowerCase();
+                            return (
+                              <tr
+                                key={row.bidId}
+                                className={`border-b border-[var(--ink)]/20 last:border-b-0 ${isWinnerRow ? "bg-[var(--acid)]/40" : ""}`}
+                              >
+                                <td className="mono px-3.5 py-3 text-xs font-medium">#{row.bidId}</td>
+                                <td className="mono min-w-0 break-all px-3.5 py-3 text-xs text-[var(--muted)]">
+                                  {row.supplier}
+                                </td>
+                                <td className="px-3.5 py-3">
+                                  {isWinnerRow ? (
+                                    <span className="inline-flex items-center gap-1.5 border-2 border-[var(--ink)] bg-[var(--acid)] px-2.5 py-0.5 text-xs font-bold uppercase text-[var(--ink)]">
+                                      <Trophy aria-hidden size={11} /> Winner
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1.5 border-2 border-[var(--ink)] bg-[var(--panel-strong)] px-2.5 py-0.5 text-xs font-bold uppercase text-[var(--ink)]">
+                                      <Lock aria-hidden size={11} /> Encrypted
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
                   )}
                 </Panel>
 
-                <Panel
-                  icon={<Trophy size={16} />}
-                  title="Award result"
-                  subtitle="After finalization, anyone can publish the winner identity with a decryption proof. Losing prices stay sealed."
-                >
-                  <div className="grid gap-3">
-                    <div className="grid gap-1.5">
-                      <div className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                        Public winning supplier
+                {tender[7] && (
+                  <Panel
+                    icon={<Trophy size={16} />}
+                    title="Award result"
+                    subtitle={
+                      winnerRecorded
+                        ? "The winner identity is public, backed by a decryption proof. Losing prices stay sealed."
+                        : "Anyone can publish the winner identity with a decryption proof. Losing prices stay sealed."
+                    }
+                  >
+                    <div className="grid gap-3">
+                      <div className="grid gap-1.5">
+                        <div className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                          Public winning supplier
+                        </div>
+                        <div
+                          className={`mono flex min-h-11 items-center break-all border-2 px-3.5 py-2.5 text-sm font-semibold ${
+                            winnerRecorded && winner && winner !== zeroAddress
+                              ? "border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)]"
+                              : "border-[var(--ink)] bg-white text-[var(--muted)]"
+                          }`}
+                        >
+                          {winnerRecorded && winner && winner !== zeroAddress ? winner : "Not recorded yet"}
+                        </div>
                       </div>
-                      <div
-                        className={`mono flex min-h-11 items-center break-all border-2 px-3.5 py-2.5 text-sm font-semibold ${
-                          winnerRecorded && winner && winner !== zeroAddress
-                            ? "border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)]"
-                            : "border-[var(--ink)] bg-white text-[var(--muted)]"
-                        }`}
-                      >
-                        {winnerRecorded && winner && winner !== zeroAddress ? winner : "Not recorded yet"}
-                      </div>
+                      {publicWinnerId && <Notice tone="ok">Publicly decrypted winning bid ID: {publicWinnerId}</Notice>}
+                      {!winnerRecorded && (
+                        <div>
+                          <ActionButton disabled={!accountReady || isActing} onClick={() => run(revealWinner)}>
+                            <Eye aria-hidden size={16} /> Reveal winner
+                          </ActionButton>
+                        </div>
+                      )}
                     </div>
-                    {publicWinnerId && <Notice tone="ok">Publicly decrypted winning bid ID: {publicWinnerId}</Notice>}
-                    <div>
-                      <ActionButton
-                        disabled={!tender[7] || winnerRecorded || !accountReady || isActing}
-                        onClick={() => run(revealWinner)}
-                      >
-                        <Eye aria-hidden size={16} /> {winnerRecorded ? "Winner revealed" : "Reveal winner"}
-                      </ActionButton>
-                    </div>
-                    {!tender[7] && (
-                      <p className="text-xs leading-5 text-[var(--muted)]">Available once the tender is finalized.</p>
-                    )}
-                  </div>
-                </Panel>
+                  </Panel>
+                )}
               </div>
 
               <aside className="grid content-start gap-5">
-                <Panel
-                  icon={<Lock size={16} />}
-                  title="Submit a bid"
-                  subtitle="Your price is encrypted in this browser before submission. It never leaves your device in plaintext."
-                >
-                  <div className="grid gap-3">
-                    {authenticated ? (
-                      currentUserBid.data ? (
-                        <Notice tone="ok">You have already submitted an encrypted bid for this tender.</Notice>
-                      ) : currentUserApproval.data ? (
-                        <Notice tone="ok">Your signed-in supplier account is approved to bid.</Notice>
+                {!isClosed && !tender[7] && (
+                  <Panel
+                    icon={<Lock size={16} />}
+                    title="Submit a bid"
+                    subtitle="Your price is encrypted in this browser before submission. It never leaves your device in plaintext."
+                  >
+                    <div className="grid gap-3">
+                      {authenticated ? (
+                        currentUserBid.data ? (
+                          <Notice tone="ok">You have already submitted an encrypted bid for this tender.</Notice>
+                        ) : currentUserApproval.data ? (
+                          <Notice tone="ok">Your signed-in supplier account is approved to bid.</Notice>
+                        ) : (
+                          <Notice>
+                            Your account is not approved for this tender yet. Ask the buyer to approve your email or
+                            wallet address.
+                          </Notice>
+                        )
                       ) : (
-                        <Notice>
-                          Your account is not approved for this tender yet. Ask the buyer to approve your email or
-                          wallet address.
-                        </Notice>
-                      )
-                    ) : (
-                      <Notice>Sign in with an approved supplier account to bid.</Notice>
-                    )}
-                    <label className="grid gap-1.5 text-sm font-bold uppercase tracking-wide" htmlFor="bid-price">
-                      Bid price
-                      <input
-                        id="bid-price"
-                        className="border-2 border-[var(--ink)] bg-white px-3.5 py-2.5 text-sm"
-                        inputMode="numeric"
-                        placeholder="980"
-                        value={bidPrice}
-                        onChange={(event) => setBidPrice(event.target.value.replace(/\D/g, ""))}
-                        disabled={Boolean(currentUserBid.data) || tender[7] || isClosed}
-                      />
-                      <span className="text-xs font-medium normal-case tracking-normal leading-5 text-[var(--muted)]">
-                        Must be at or below the budget cap of {tender[4].toString()}.
-                      </span>
-                    </label>
-                    <ActionButton
-                      disabled={
-                        !accountReady ||
-                        !currentUserApproval.data ||
-                        Boolean(currentUserBid.data) ||
-                        !bidPrice ||
-                        tender[7] ||
-                        isClosed ||
-                        isActing
-                      }
-                      onClick={() => run(submitEncryptedBid)}
-                    >
-                      <Lock aria-hidden size={16} /> Encrypt and submit bid
-                    </ActionButton>
-                    {isClosed && !tender[7] && (
-                      <p className="text-xs leading-5 text-[var(--muted)]">Bidding closed. Waiting for the buyer to finalize.</p>
-                    )}
-                  </div>
-                </Panel>
-
-                <Panel
-                  icon={<KeyRound size={16} />}
-                  title="Private price access"
-                  subtitle="Only the buyer and approved auditors can decrypt the winning price. It is never published."
-                >
-                  <div className="grid gap-4">
-                    <div className="grid gap-2.5">
-                      <ActionButton disabled={!tender[7] || !accountReady || isActing} onClick={() => run(decryptPrice)}>
-                        <KeyRound aria-hidden size={16} /> Decrypt winning price
-                      </ActionButton>
-                      {decryptedPrice ? (
-                        <div className="border-2 border-[var(--ink)] bg-[var(--acid)] px-3.5 py-3">
-                          <div className="text-xs font-bold uppercase tracking-wide text-[var(--ink)]">
-                            Winning price (visible only to you)
-                          </div>
-                          <div className="mono mt-1 text-2xl font-black text-[var(--ink)]">{decryptedPrice}</div>
-                        </div>
-                      ) : (
-                        <p className="text-xs leading-5 text-[var(--muted)]">
-                          {tender[7]
-                            ? "Decryption runs through the Zama relayer and can take a moment on first use."
-                            : "Available after finalization, for authorized accounts only."}
-                        </p>
+                        <Notice>Sign in with an approved supplier account to bid.</Notice>
+                      )}
+                      {!currentUserBid.data && (
+                        <>
+                          <label className="grid gap-1.5 text-sm font-bold uppercase tracking-wide" htmlFor="bid-price">
+                            Bid price
+                            <input
+                              id="bid-price"
+                              className="border-2 border-[var(--ink)] bg-white px-3.5 py-2.5 text-sm"
+                              inputMode="numeric"
+                              placeholder="980"
+                              value={bidPrice}
+                              onChange={(event) => setBidPrice(event.target.value.replace(/\D/g, ""))}
+                            />
+                            <span className="text-xs font-medium normal-case tracking-normal leading-5 text-[var(--muted)]">
+                              Must be at or below the budget cap of {tender[4].toString()}.
+                            </span>
+                          </label>
+                          <ActionButton
+                            disabled={!accountReady || !currentUserApproval.data || !bidPrice || isActing}
+                            onClick={() => run(submitEncryptedBid)}
+                          >
+                            <Lock aria-hidden size={16} /> Encrypt and submit bid
+                          </ActionButton>
+                        </>
                       )}
                     </div>
-                    <div className="grid gap-2.5 border-t-2 border-[var(--ink)] pt-4">
-                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wide">
-                        <ScanSearch aria-hidden size={14} strokeWidth={2.5} className="text-[var(--ink)]" /> Grant auditor access
+                  </Panel>
+                )}
+                {isClosed && !tender[7] && (
+                  <Panel
+                    icon={<Hourglass size={16} />}
+                    title="Bidding closed"
+                    subtitle="The deadline has passed. No new bids can be submitted."
+                  >
+                    <Notice>
+                      {currentUserBid.data
+                        ? "Your encrypted bid is in. Waiting for the buyer to finalize the selection."
+                        : "Waiting for the buyer to finalize the encrypted winner selection."}
+                    </Notice>
+                  </Panel>
+                )}
+
+                {tender[7] && (
+                  <Panel
+                    icon={<KeyRound size={16} />}
+                    title="Private price access"
+                    subtitle="Only the buyer and approved auditors can decrypt the winning price. It is never published."
+                  >
+                    <div className="grid gap-4">
+                      <div className="grid gap-2.5">
+                        <ActionButton disabled={!accountReady || isActing} onClick={() => run(decryptPrice)}>
+                          <KeyRound aria-hidden size={16} /> Decrypt winning price
+                        </ActionButton>
+                        {decryptedPrice ? (
+                          <div className="border-2 border-[var(--ink)] bg-[var(--acid)] px-3.5 py-3">
+                            <div className="text-xs font-bold uppercase tracking-wide text-[var(--ink)]">
+                              Winning price (visible only to you)
+                            </div>
+                            <div className="mono mt-1 text-2xl font-black text-[var(--ink)]">{decryptedPrice}</div>
+                          </div>
+                        ) : (
+                          <p className="text-xs leading-5 text-[var(--muted)]">
+                            Decryption runs through the Zama relayer and can take a moment on first use.
+                          </p>
+                        )}
                       </div>
-                      <p className="text-xs leading-5 text-[var(--muted)]">
-                        Buyers can let an auditor decrypt the winning price without making it public.
-                      </p>
-                      <label className="sr-only" htmlFor="auditor-address">
-                        Auditor wallet address
-                      </label>
-                      <input
-                        id="auditor-address"
-                        className="mono border-2 border-[var(--ink)] bg-white px-3.5 py-2.5 text-sm"
-                        placeholder="0x..."
-                        value={auditorInput}
-                        onChange={(event) => setAuditorInput(event.target.value)}
-                      />
-                      <ActionButton
-                        disabled={!isBuyer || !tender[7] || !auditorInput || isActing}
-                        onClick={() => run(grantAuditor)}
-                        variant="secondary"
-                      >
-                        <UsersRound aria-hidden size={16} /> Grant auditor access
-                      </ActionButton>
+                      {isBuyer && (
+                        <div className="grid gap-2.5 border-t-2 border-[var(--ink)] pt-4">
+                          <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wide">
+                            <ScanSearch aria-hidden size={14} strokeWidth={2.5} className="text-[var(--ink)]" /> Grant auditor access
+                          </div>
+                          <p className="text-xs leading-5 text-[var(--muted)]">
+                            Let an auditor decrypt the winning price without making it public.
+                          </p>
+                          <label className="sr-only" htmlFor="auditor-address">
+                            Auditor wallet address
+                          </label>
+                          <input
+                            id="auditor-address"
+                            className="mono border-2 border-[var(--ink)] bg-white px-3.5 py-2.5 text-sm"
+                            placeholder="0x..."
+                            value={auditorInput}
+                            onChange={(event) => setAuditorInput(event.target.value)}
+                          />
+                          <ActionButton
+                            disabled={!auditorInput || isActing}
+                            onClick={() => run(grantAuditor)}
+                            variant="secondary"
+                          >
+                            <UsersRound aria-hidden size={16} /> Grant auditor access
+                          </ActionButton>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </Panel>
+                  </Panel>
+                )}
               </aside>
             </section>
             {status && (
