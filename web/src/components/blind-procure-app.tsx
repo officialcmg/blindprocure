@@ -429,15 +429,13 @@ export function HomePage() {
             ))}
           </div>
           <h1 className="text-[min(15vw,11svh)] font-black uppercase leading-[0.85] tracking-tighter sm:text-[min(11vw,14svh)]">
-            Bids are
+            Onchain procurement
             <br />
-            <span className="inline-block bg-[var(--ink)] px-3 text-[var(--acid)]">nobody&apos;s</span>
-            <br />
-            business.
+            <span className="inline-block bg-[var(--ink)] px-3 text-[var(--acid)]">without price leakage.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg font-medium leading-7">
-            Procurement without public bid leakage. Sealed-bid tenders on Ethereum: the smart
-            contract picks the cheapest valid offer without ever seeing a single price.
+            Suppliers submit encrypted prices. Zama FHE lets the contract select the lowest valid
+            offer onchain, while anyone can verify the award without seeing the losing bids.
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-4">
             <Link
