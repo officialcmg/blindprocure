@@ -398,7 +398,7 @@ function TxToast({ status }: { status: TxStatus | null }) {
 
 export function HomePage() {
   return (
-    <div className="h-screen snap-y snap-mandatory overflow-y-auto scroll-smooth bg-[var(--background)] text-[var(--ink)]">
+    <div className="fixed inset-0 snap-y snap-mandatory overflow-y-auto overscroll-contain scroll-smooth bg-[var(--background)] text-[var(--ink)]">
       {/* 01 Hero */}
       <section className="flex min-h-screen snap-start flex-col border-b-4 border-[var(--ink)] px-5 py-6 sm:px-10 lg:px-16">
         <header className="flex items-center justify-between border-b-4 border-[var(--ink)] pb-4">

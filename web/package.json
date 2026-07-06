@@ -9,6 +9,7 @@
     "lint": "eslint",
     "verify:privy-integration": "node scripts/verify-privy-integration.mjs",
     "verify:smart-account-decryption": "node scripts/verify-smart-account-decryption.mjs",
+    "verify:encrypt-helper": "node scripts/verify-encrypt-helper.mjs",
     "verify:hosted": "node scripts/verify-hosted.mjs"
   },
   "dependencies": {

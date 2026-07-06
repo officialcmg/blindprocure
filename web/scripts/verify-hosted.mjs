@@ -92,9 +92,9 @@ function connect(webSocketDebuggerUrl) {
   });
 }
 
-function assertIncludes(text, expected, path) {
-  if (!text.includes(expected)) {
-    throw new Error(`Expected rendered ${path} to include "${expected}"`);
+function assertIncludesText(text, expected, path) {
+  if (!text.toLowerCase().includes(expected.toLowerCase())) {
+    throw new Error(`Expected rendered ${path} to include "${expected}". Saw: ${text.slice(0, 500)}`);
   }
 }
 
@@ -127,6 +127,16 @@ const chrome = spawn(chromeBin, [
   "about:blank",
 ]);
 
+function waitForExit(child) {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    child.once("exit", resolve);
+  });
+}
+
 try {
   await waitForChrome();
   const pages = await getJson("/json/list");
@@ -140,29 +150,41 @@ try {
   await cdp.send("Runtime.enable");
 
   const home = await renderedText(cdp, "/");
-  assertIncludes(home, "BlindProcure", "/");
-  assertIncludes(home, "Procurement without public bid leakage", "/");
-  assertIncludes(home, "Launch workspace", "/");
+  assertIncludesText(home, "BlindProcure", "/");
+  assertIncludesText(home, "Procurement without public bid leakage", "/");
+  assertIncludesText(home, "Launch workspace", "/");
   assertExcludes(home, "Contract address is not configured", "/");
 
   const app = await renderedText(cdp, "/app");
-  assertIncludes(app, "BlindProcure", "/app");
-  assertIncludes(app, "Tenders", "/app");
-  assertIncludes(app, "Sign in", "/app");
+  assertIncludesText(app, "BlindProcure", "/app");
+  assertIncludesText(app, "Tenders", "/app");
+  assertIncludesText(app, "Sign in", "/app");
   assertExcludes(app, "Contract address is not configured", "/app");
 
   const create = await renderedText(cdp, "/app/tenders/new");
-  assertIncludes(create, "Create tender", "/app/tenders/new");
+  assertIncludesText(create, "Create tender", "/app/tenders/new");
   assertExcludes(create, "Contract address is not configured", "/app/tenders/new");
 
   const tenders = await renderedText(cdp, "/app/tenders");
-  assertIncludes(tenders, "Tenders", "/app/tenders");
+  assertIncludesText(tenders, "Tenders", "/app/tenders");
   assertExcludes(tenders, "Contract address is not configured", "/app/tenders");
+
+  const encrypt = await renderedText(cdp, "/encrypt-bid");
+  assertIncludesText(encrypt, "Local bid encryption", "/encrypt-bid");
+  assertIncludesText(encrypt, "plaintext price never leaves this browser", "/encrypt-bid");
+  const isolation = await cdp.send("Runtime.evaluate", {
+    expression: "({ isolated: window.crossOriginIsolated, hasSharedArrayBuffer: typeof SharedArrayBuffer !== 'undefined' })",
+    returnByValue: true,
+  });
+  if (!isolation.result.value?.isolated || !isolation.result.value?.hasSharedArrayBuffer) {
+    throw new Error(`/encrypt-bid is not Chrome encryption-ready: ${JSON.stringify(isolation.result.value)}`);
+  }
 
   cdp.close();
   console.log("Hosted browser verification passed.");
   console.log(`Base URL: ${baseUrl}`);
 } finally {
   chrome.kill();
-  await rm(profileDir, { recursive: true, force: true });
+  await waitForExit(chrome);
+  await rm(profileDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
 }
