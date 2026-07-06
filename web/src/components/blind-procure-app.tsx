@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
-  ArrowUpRight,
   Banknote,
   CheckCircle2,
   Check,
@@ -13,7 +12,6 @@ import {
   Eye,
   EyeOff,
   ExternalLink,
-  FileCheck2,
   FileText,
   Gavel,
   Globe,
@@ -284,12 +282,6 @@ function Shell({ children }: { children: React.ReactNode }) {
               >
                 Create
               </Link>
-              <Link
-                className="rounded-md px-3 py-1.5 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--panel-strong)] hover:text-[var(--foreground)]"
-                href="/demo"
-              >
-                Demo
-              </Link>
             </nav>
           </div>
           <AuthControls />
@@ -466,12 +458,6 @@ export function HomePage() {
               href="/app/tenders"
             >
               Tenders
-            </Link>
-            <Link
-              className="hidden rounded-md px-3 py-1.5 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--panel-strong)] hover:text-[var(--foreground)] sm:inline"
-              href="/demo"
-            >
-              Demo
             </Link>
             <Link
               className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--accent-strong)]"
@@ -651,9 +637,9 @@ export function HomePage() {
               </Link>
               <Link
                 className="inline-flex items-center gap-2 rounded-md border border-white/25 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/10"
-                href="/demo"
+                href="/app/tenders/new"
               >
-                See the demo flow
+                Create a tender
               </Link>
             </div>
           </div>
@@ -1063,78 +1049,6 @@ export function CreateTenderPage() {
             After creation you will approve suppliers by email or wallet address. Approved suppliers
             encrypt their prices locally before submitting - no plaintext price ever reaches the chain.
           </span>
-        </div>
-      </section>
-    </Shell>
-  );
-}
-
-export function DemoPage() {
-  const script = [
-    { role: "Buyer", text: "Creates the tender and approves three suppliers by email." },
-    { role: "Suppliers", text: "Each signs in and submits a bid, encrypted in the browser before it leaves the device." },
-    { role: "Buyer", text: "Finalizes after the deadline. The contract compares ciphertexts and selects the lowest valid bid." },
-    { role: "Anyone", text: "Reveals the winner identity onchain, backed by a decryption proof." },
-    { role: "Buyer / Auditor", text: "Privately decrypts the winning price. Losing prices stay encrypted forever." },
-  ];
-
-  return (
-    <Shell>
-      <section className="py-8">
-        <p className="mono text-xs uppercase tracking-wide text-[var(--muted)]">Recording path</p>
-        <h1 className="mt-1.5 text-3xl font-semibold tracking-tight">Demo tender</h1>
-        <p className="mt-2 max-w-3xl leading-7 text-[var(--muted)]">
-          The full demo uses one live tender on Sepolia and walks every role through the sealed-bid
-          lifecycle end to end.
-        </p>
-
-        <ol className="mt-7 grid max-w-3xl gap-0 rounded-lg border border-[var(--line)] bg-[var(--panel)]">
-          {script.map((step, index) => (
-            <li
-              key={index}
-              className="grid grid-cols-[auto_1fr] items-start gap-3.5 border-b border-[var(--line)] px-5 py-4 last:border-b-0"
-            >
-              <span
-                aria-hidden
-                className="mono mt-0.5 grid h-7 w-7 place-items-center rounded-full bg-[var(--accent-soft)] text-xs font-semibold text-[var(--accent-strong)]"
-              >
-                {index + 1}
-              </span>
-              <div>
-                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--accent-strong)]">{step.role}</span>
-                <p className="mt-0.5 text-sm leading-6 text-[var(--ink)]">{step.text}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-
-        <div className="mt-7 grid max-w-3xl gap-4 md:grid-cols-2">
-          <Link
-            className="group rounded-lg border border-[var(--line)] bg-[var(--panel)] p-5 transition hover:border-[var(--accent)] hover:shadow-sm"
-            href="/app/tenders/new"
-          >
-            <FileCheck2 aria-hidden className="mb-3 text-[var(--accent)]" size={22} />
-            <div className="flex items-center gap-1.5 font-semibold">
-              Create the demo tender
-              <ArrowUpRight aria-hidden size={15} className="text-[var(--muted)] transition group-hover:text-[var(--accent)]" />
-            </div>
-            <div className="mt-1.5 text-sm leading-6 text-[var(--muted)]">
-              Use the prefilled Office laptops Q3 tender to start a fresh run.
-            </div>
-          </Link>
-          <Link
-            className="group rounded-lg border border-[var(--line)] bg-[var(--panel)] p-5 transition hover:border-[var(--accent)] hover:shadow-sm"
-            href="/app/tenders/1"
-          >
-            <Trophy aria-hidden className="mb-3 text-[var(--accent)]" size={22} />
-            <div className="flex items-center gap-1.5 font-semibold">
-              Open tender #1
-              <ArrowUpRight aria-hidden size={15} className="text-[var(--muted)] transition group-hover:text-[var(--accent)]" />
-            </div>
-            <div className="mt-1.5 text-sm leading-6 text-[var(--muted)]">
-              Jump into the live demo tender once it exists on Sepolia.
-            </div>
-          </Link>
         </div>
       </section>
     </Shell>

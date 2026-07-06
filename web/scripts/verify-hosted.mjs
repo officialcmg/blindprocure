@@ -155,10 +155,9 @@ try {
   assertIncludes(create, "Create tender", "/app/tenders/new");
   assertExcludes(create, "Contract address is not configured", "/app/tenders/new");
 
-  const demo = await renderedText(cdp, "/demo");
-  assertIncludes(demo, "Demo tender", "/demo");
-  assertIncludes(demo, "Open tender #1", "/demo");
-  assertExcludes(demo, "Contract address is not configured", "/demo");
+  const tenders = await renderedText(cdp, "/app/tenders");
+  assertIncludes(tenders, "Tenders", "/app/tenders");
+  assertExcludes(tenders, "Contract address is not configured", "/app/tenders");
 
   cdp.close();
   console.log("Hosted browser verification passed.");
