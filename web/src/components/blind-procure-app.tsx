@@ -292,18 +292,22 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Notice({ children, tone = "info" }: { children: React.ReactNode; tone?: "info" | "error" | "ok" }) {
+function Notice({ children, tone = "info" }: { children: React.ReactNode; tone?: "info" | "error" | "ok" | "warn" }) {
   const styles =
     tone === "error"
       ? "border-[var(--danger)] bg-[var(--danger-soft)] text-[var(--danger)]"
       : tone === "ok"
         ? "border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)]"
-        : "border-[var(--ink)] bg-[var(--panel-strong)] text-[var(--ink)]";
+        : tone === "warn"
+          ? "border-[var(--ink)] bg-[var(--warn-soft)] text-[var(--ink)]"
+          : "border-[var(--ink)] bg-[var(--panel-strong)] text-[var(--ink)]";
   const icon =
     tone === "error" ? (
       <CircleAlert aria-hidden size={15} strokeWidth={2.5} className="mt-0.5 shrink-0" />
     ) : tone === "ok" ? (
       <CheckCircle2 aria-hidden size={15} strokeWidth={2.5} className="mt-0.5 shrink-0" />
+    ) : tone === "warn" ? (
+      <Hourglass aria-hidden size={15} strokeWidth={2.5} className="mt-0.5 shrink-0" />
     ) : (
       <Info aria-hidden size={15} strokeWidth={2.5} className="mt-0.5 shrink-0" />
     );
@@ -707,6 +711,7 @@ export function TendersPage() {
 function tenderStatus(tender: TenderTuple, nowMs: number): { label: string; tone: "ok" | "warn" | "info" | "accent" } {
   const winnerRecorded = tender[8] && tender[9] !== zeroAddress;
   if (winnerRecorded) return { label: "Winner revealed", tone: "ok" };
+  if (tender[7] && tender[6] === 0) return { label: "Closed · no bids", tone: "warn" };
   if (tender[7]) return { label: "Finalized", tone: "ok" };
   if (nowMs >= Number(tender[3]) * 1000) return { label: "Ready to finalize", tone: "warn" };
   return { label: "Open for bids", tone: "accent" };
@@ -1008,6 +1013,7 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
   const [auditorInput, setAuditorInput] = useState("");
   const [decryptedPriceState, setDecryptedPriceState] = useState<{ account: Address; value: string } | null>(null);
   const [publicWinnerId, setPublicWinnerId] = useState<string | null>(null);
+  const [noValidWinner, setNoValidWinner] = useState(false);
   const [statusState, setStatusState] = useState<{ account: Address; value: TxStatus } | null>(null);
   const [isActing, setIsActing] = useState(false);
 
@@ -1169,6 +1175,9 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
 
   async function revealWinner() {
     requireAccount();
+    if (tender && tender[6] === 0) {
+      throw new Error("This tender closed with no bids submitted. There is no winner to reveal.");
+    }
     const handle = await publicClient?.readContract({
       address: blindProcureAddress,
       abi: blindProcureAbi,
@@ -1179,6 +1188,10 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
     const result = await publicDecryptWinnerId({ handle: handle as Hex, getChainId });
     const clearValue = result.clearValues[handle as Hex];
     setPublicWinnerId(String(clearValue));
+    if (Number(clearValue) === 0) {
+      setNoValidWinner(true);
+      throw new Error("No bid was within the budget cap. This tender has no valid winner to record.");
+    }
     const data = encodeFunctionData({
       abi: blindProcureAbi,
       functionName: "recordWinnerFromProof",
@@ -1579,7 +1592,20 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                   )}
                 </Panel>
 
-                {tender[7] && (
+                {tender[7] && tender[6] === 0 && (
+                  <Panel
+                    icon={<Trophy size={16} />}
+                    title="Award result"
+                    subtitle="This tender's deadline passed with no encrypted bids submitted."
+                  >
+                    <Notice tone="warn">
+                      No supplier submitted a bid before the deadline. There is no winner to reveal - this
+                      tender is closed with no award.
+                    </Notice>
+                  </Panel>
+                )}
+
+                {tender[7] && tender[6] > 0 && (
                   <Panel
                     icon={<Trophy size={16} />}
                     title="Award result"
@@ -1604,8 +1630,16 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                           {winnerRecorded && winner && winner !== zeroAddress ? winner : "Not recorded yet"}
                         </div>
                       </div>
-                      {publicWinnerId && <Notice tone="ok">Publicly decrypted winning bid ID: {publicWinnerId}</Notice>}
-                      {!winnerRecorded && (
+                      {publicWinnerId && !noValidWinner && (
+                        <Notice tone="ok">Publicly decrypted winning bid ID: {publicWinnerId}</Notice>
+                      )}
+                      {noValidWinner && (
+                        <Notice tone="warn">
+                          Every submitted bid was above the budget cap. No bid qualifies to win - this tender
+                          closes with no award.
+                        </Notice>
+                      )}
+                      {!winnerRecorded && !noValidWinner && (
                         <div>
                           <ActionButton disabled={!accountReady || isActing} onClick={() => run(revealWinner)}>
                             <Eye aria-hidden size={16} /> Reveal winner
