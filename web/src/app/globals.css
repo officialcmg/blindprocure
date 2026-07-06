@@ -1,32 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f2ea;
-  --foreground: #1b1813;
-  --muted: #6c675c;
-  --panel: #fffdf7;
-  --panel-strong: #f6efe0;
-  --line: #ddd3bf;
-  --line-strong: #c9bda3;
-  --accent: #0f766e;
-  --accent-strong: #115e59;
-  --accent-soft: #e7f5f2;
-  --ink: #232d2a;
-  --danger: #a33d2e;
-  --danger-soft: #fdf1ee;
-  --danger-line: #e0b3a8;
+  /* Signal: brutalist modernist */
+  --background: #f2f2ee;
+  --foreground: #111111;
+  --muted: #55554f;
+  --panel: #f2f2ee;
+  --panel-strong: #e7e7e0;
+  --line: #111111;
+  --line-strong: #111111;
+  --accent: #111111;
+  --accent-strong: #000000;
+  --acid: #c8f542;
+  --ink: #111111;
+  --danger: #e63b2e;
+  --danger-soft: #fdeceb;
+  --danger-line: #e63b2e;
   --warn: #8a5b00;
-  --warn-soft: #fdf4de;
-  --warn-line: #e4cf9b;
-  --ok: #115e59;
-  --ok-soft: #e9f8f4;
-  --ok-line: #a4d4cc;
+  --warn-soft: #fff3cf;
+  --warn-line: #111111;
+  --ok: #111111;
+  --ok-soft: #c8f542;
+  --ok-line: #111111;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist), "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-archivo), "Archivo", ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, monospace;
 }
 
@@ -43,11 +44,9 @@ html {
 body {
   min-height: 100%;
   margin: 0;
-  background:
-    linear-gradient(180deg, rgba(255, 253, 247, 0.75), rgba(245, 242, 234, 0) 360px),
-    var(--background);
+  background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist), "Geist", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-archivo), "Archivo", ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -64,30 +63,28 @@ button {
 
 button:disabled {
   cursor: not-allowed;
-  opacity: 0.55;
+  opacity: 0.45;
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 3px solid var(--ink);
   outline-offset: 2px;
-  border-radius: 2px;
 }
 
 ::selection {
-  background: var(--accent-soft);
-  color: var(--accent-strong);
+  background: var(--acid);
+  color: var(--ink);
 }
 
 input,
 textarea {
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  transition: box-shadow 100ms ease;
 }
 
 input:focus,
 textarea:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+  box-shadow: 4px 4px 0 0 var(--ink);
 }
 
 .mono {

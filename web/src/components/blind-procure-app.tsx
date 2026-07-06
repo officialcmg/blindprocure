@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  ArrowDown,
   ArrowRight,
   Banknote,
   CheckCircle2,
@@ -10,11 +11,9 @@ import {
   CircleAlert,
   Copy,
   Eye,
-  EyeOff,
   ExternalLink,
   FileText,
   Gavel,
-  Globe,
   Hourglass,
   Info,
   KeyRound,
@@ -22,7 +21,6 @@ import {
   LogIn,
   LogOut,
   Lock,
-  LockKeyhole,
   Mail,
   Plus,
   ScanSearch,
@@ -205,39 +203,36 @@ export function AuthControls() {
     <div className="flex flex-wrap items-center gap-2">
       {authenticated ? (
         <>
-          <span className="inline-flex max-w-full items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-xs text-[var(--ink)]">
+          <span className="inline-flex max-w-full items-center gap-2 border-2 border-[var(--ink)] px-3 py-2 text-xs font-bold uppercase tracking-wide text-[var(--ink)]">
             {accountReady ? (
               <>
-                <span
-                  aria-hidden
-                  className="h-2 w-2 shrink-0 rounded-full bg-[var(--accent)]"
-                />
-                <span className="truncate font-medium">{identity || "Signed in"}</span>
-                <span className="mono hidden text-[var(--muted)] sm:inline">
+                <span aria-hidden className="h-2.5 w-2.5 shrink-0 bg-[var(--acid)] outline outline-1 outline-[var(--ink)]" />
+                <span className="truncate normal-case">{identity || "Signed in"}</span>
+                <span className="mono hidden font-normal normal-case text-[var(--muted)] sm:inline">
                   {shortAddress(smartAccountAddress)}
                 </span>
               </>
             ) : (
               <>
                 <Loader2 aria-hidden className="animate-spin" size={13} />
-                Preparing sponsored account...
+                Preparing account...
               </>
             )}
           </span>
           {accountReady && (
             <button
               aria-label={copied ? "Account address copied" : "Copy account address"}
-              className="grid h-9 w-9 place-items-center rounded-md border border-[var(--line)] bg-[var(--panel)] text-[var(--ink)] transition hover:border-[var(--line-strong)] hover:bg-white"
+              className="grid h-9 w-9 place-items-center border-2 border-[var(--ink)] bg-[var(--background)] text-[var(--ink)] transition hover:-translate-y-0.5"
               data-account-id={smartAccountAddress}
               onClick={copyAccountId}
               title={smartAccountAddress}
             >
-              {copied ? <Check aria-hidden size={16} className="text-[var(--accent)]" /> : <Copy aria-hidden size={16} />}
+              {copied ? <Check aria-hidden size={16} /> : <Copy aria-hidden size={16} />}
             </button>
           )}
           <button
             aria-label="Sign out"
-            className="grid h-9 w-9 place-items-center rounded-md border border-[var(--line)] bg-[var(--panel)] text-[var(--ink)] transition hover:border-[var(--line-strong)] hover:bg-white"
+            className="grid h-9 w-9 place-items-center border-2 border-[var(--ink)] bg-[var(--background)] text-[var(--ink)] transition hover:-translate-y-0.5"
             onClick={() => logout()}
             title="Sign out"
           >
@@ -246,11 +241,11 @@ export function AuthControls() {
         </>
       ) : (
         <button
-          className="inline-flex items-center gap-2 rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--accent-strong)]"
+          className="inline-flex items-center gap-2 border-2 border-[var(--ink)] bg-[var(--acid)] px-4 py-2 text-sm font-bold uppercase tracking-widest text-[var(--ink)] transition hover:-translate-y-0.5"
           disabled={!ready}
           onClick={() => login({ loginMethods: ["email", "google"] })}
         >
-          <LogIn aria-hidden size={16} /> Sign in
+          <LogIn aria-hidden size={16} strokeWidth={2.5} /> Sign in
         </button>
       )}
     </div>
@@ -260,24 +255,21 @@ export function AuthControls() {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-[var(--panel)]/95 backdrop-blur">
+      <header className="sticky top-0 z-20 border-b-4 border-[var(--ink)] bg-[var(--background)]">
         <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2.5" aria-label="BlindProcure home">
-              <span className="grid h-9 w-9 place-items-center rounded-md bg-[var(--ink)] text-white">
-                <ShieldCheck aria-hidden size={18} />
-              </span>
-              <span className="text-base font-semibold tracking-tight">BlindProcure</span>
+            <Link href="/" className="flex items-center gap-2 text-base font-black uppercase tracking-tight" aria-label="BlindProcure home">
+              <ShieldCheck aria-hidden size={20} strokeWidth={2.5} /> BlindProcure
             </Link>
             <nav aria-label="Primary" className="hidden items-center gap-1 sm:flex">
               <Link
-                className="rounded-md px-3 py-1.5 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--panel-strong)] hover:text-[var(--foreground)]"
+                className="px-3 py-1.5 text-sm font-bold uppercase tracking-widest text-[var(--muted)] transition hover:text-[var(--ink)]"
                 href="/app"
               >
                 Tenders
               </Link>
               <Link
-                className="rounded-md px-3 py-1.5 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--panel-strong)] hover:text-[var(--foreground)]"
+                className="px-3 py-1.5 text-sm font-bold uppercase tracking-widest text-[var(--muted)] transition hover:text-[var(--ink)]"
                 href="/app/tenders/new"
               >
                 Create
@@ -288,11 +280,11 @@ function Shell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 sm:px-6 lg:px-8">{children}</main>
-      <footer className="border-t border-[var(--line)]">
-        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-4 text-xs text-[var(--muted)] sm:px-6 lg:px-8">
-          <span>BlindProcure · Sealed-bid procurement on Sepolia</span>
+      <footer className="border-t-4 border-[var(--ink)]">
+        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-4 text-xs font-bold uppercase tracking-widest text-[var(--muted)] sm:px-6 lg:px-8">
+          <span>BlindProcure — Sealed-bid procurement on Sepolia</span>
           <span className="inline-flex items-center gap-1.5">
-            <Lock aria-hidden size={12} /> Bid prices encrypted with Zama FHE
+            <Lock aria-hidden size={12} /> Sealed with Zama FHE
           </span>
         </div>
       </footer>
@@ -303,21 +295,21 @@ function Shell({ children }: { children: React.ReactNode }) {
 function Notice({ children, tone = "info" }: { children: React.ReactNode; tone?: "info" | "error" | "ok" }) {
   const styles =
     tone === "error"
-      ? "border-[var(--danger-line)] bg-[var(--danger-soft)] text-[var(--danger)]"
+      ? "border-[var(--danger)] bg-[var(--danger-soft)] text-[var(--danger)]"
       : tone === "ok"
-        ? "border-[var(--ok-line)] bg-[var(--ok-soft)] text-[var(--ok)]"
-        : "border-[var(--line)] bg-[var(--panel-strong)] text-[var(--ink)]";
+        ? "border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)]"
+        : "border-[var(--ink)] bg-[var(--panel-strong)] text-[var(--ink)]";
   const icon =
     tone === "error" ? (
-      <CircleAlert aria-hidden size={15} className="mt-0.5 shrink-0" />
+      <CircleAlert aria-hidden size={15} strokeWidth={2.5} className="mt-0.5 shrink-0" />
     ) : tone === "ok" ? (
-      <CheckCircle2 aria-hidden size={15} className="mt-0.5 shrink-0" />
+      <CheckCircle2 aria-hidden size={15} strokeWidth={2.5} className="mt-0.5 shrink-0" />
     ) : (
-      <Info aria-hidden size={15} className="mt-0.5 shrink-0 text-[var(--muted)]" />
+      <Info aria-hidden size={15} strokeWidth={2.5} className="mt-0.5 shrink-0" />
     );
 
   return (
-    <div className={`flex items-start gap-2.5 rounded-md border px-3.5 py-3 text-sm leading-6 ${styles}`} role={tone === "error" ? "alert" : "status"}>
+    <div className={`flex items-start gap-2.5 border-2 px-3.5 py-3 text-sm font-medium leading-6 ${styles}`} role={tone === "error" ? "alert" : "status"}>
       {icon}
       <div className="min-w-0 flex-1">{children}</div>
     </div>
@@ -339,12 +331,12 @@ function ActionButton({
 }) {
   const styles =
     variant === "secondary"
-      ? "border border-[var(--line)] bg-white text-[var(--ink)] hover:border-[var(--line-strong)] hover:bg-[var(--panel-strong)]"
-      : "bg-[var(--accent)] text-white shadow-sm hover:bg-[var(--accent-strong)]";
+      ? "border-2 border-[var(--ink)] bg-[var(--background)] text-[var(--ink)] enabled:hover:-translate-y-0.5"
+      : "border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--acid)] enabled:hover:-translate-y-0.5";
 
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold transition ${styles}`}
+      className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-widest transition ${styles}`}
       disabled={disabled}
       onClick={onClick}
     >
@@ -360,23 +352,23 @@ function TxToast({ status }: { status: TxStatus | null }) {
   const isPending = status.tone === "pending" || !status.tone;
   const styles =
     status.tone === "error"
-      ? "border-[var(--danger-line)] bg-[var(--danger-soft)] text-[var(--danger)]"
+      ? "border-[var(--danger)] bg-[var(--danger-soft)] text-[var(--danger)]"
       : status.tone === "ok"
-        ? "border-[var(--ok-line)] bg-[var(--ok-soft)] text-[var(--ok)]"
-        : "border-[var(--line)] bg-[var(--panel)] text-[var(--ink)]";
+        ? "border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)]"
+        : "border-[var(--ink)] bg-[var(--background)] text-[var(--ink)]";
   const icon =
     status.tone === "error" ? (
-      <CircleAlert aria-hidden size={16} className="mt-0.5 shrink-0" />
+      <CircleAlert aria-hidden size={16} strokeWidth={2.5} className="mt-0.5 shrink-0" />
     ) : status.tone === "ok" ? (
-      <CheckCircle2 aria-hidden size={16} className="mt-0.5 shrink-0" />
+      <CheckCircle2 aria-hidden size={16} strokeWidth={2.5} className="mt-0.5 shrink-0" />
     ) : (
-      <Loader2 aria-hidden size={16} className="mt-0.5 shrink-0 animate-spin text-[var(--accent)]" />
+      <Loader2 aria-hidden size={16} className="mt-0.5 shrink-0 animate-spin" />
     );
 
   return (
     <div
       aria-live="polite"
-      className={`toast-enter flex items-start gap-3 rounded-md border px-4 py-3 text-sm shadow-sm ${styles}`}
+      className={`toast-enter flex items-start gap-3 border-2 px-4 py-3 text-sm shadow-[4px_4px_0_0_var(--ink)] ${styles}`}
       role={status.tone === "error" ? "alert" : "status"}
     >
       {icon}
@@ -401,259 +393,190 @@ function TxToast({ status }: { status: TxStatus | null }) {
 }
 
 export function HomePage() {
-  const workflow = [
-    {
-      icon: <FileText aria-hidden size={18} />,
-      title: "Buyer publishes a tender",
-      body: "Title, spec hash, budget cap, and deadline are public onchain. No prices exist yet.",
-    },
-    {
-      icon: <LockKeyhole aria-hidden size={18} />,
-      title: "Suppliers bid encrypted",
-      body: "Approved suppliers encrypt their price in the browser with Zama FHE before it ever leaves the device.",
-    },
-    {
-      icon: <Gavel aria-hidden size={18} />,
-      title: "The contract picks the winner",
-      body: "After the deadline, the contract compares ciphertexts and selects the lowest valid bid without decrypting anything.",
-    },
-    {
-      icon: <Trophy aria-hidden size={18} />,
-      title: "Only the right result is revealed",
-      body: "The winner identity becomes public with a decryption proof. Losing prices stay encrypted forever.",
-    },
-  ];
-
-  const privacyModel = [
-    {
-      icon: <Globe aria-hidden size={16} />,
-      title: "Public",
-      items: ["Tender title, spec hash, budget cap, deadline", "Number of encrypted bids and bidder addresses", "Winning supplier identity, backed by proof"],
-    },
-    {
-      icon: <EyeOff aria-hidden size={16} />,
-      title: "Never public",
-      items: ["Every losing bid price", "Bid prices during the bidding window", "Any plaintext price in transit or onchain"],
-    },
-    {
-      icon: <KeyRound aria-hidden size={16} />,
-      title: "Selective access",
-      items: ["Buyer decrypts the winning price privately", "Buyer can grant auditors the same access", "Access is enforced by the Zama ACL onchain"],
-    },
-  ];
-
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--background)] text-[var(--foreground)]">
-      <header className="border-b border-[var(--line)] bg-[var(--panel)]/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-2.5" aria-label="BlindProcure home">
-            <span className="grid h-9 w-9 place-items-center rounded-md bg-[var(--ink)] text-white">
-              <ShieldCheck aria-hidden size={18} />
-            </span>
-            <span className="text-base font-semibold tracking-tight">BlindProcure</span>
+    <div className="h-screen snap-y snap-mandatory overflow-y-auto scroll-smooth bg-[var(--background)] text-[var(--ink)]">
+      {/* 01 Hero */}
+      <section className="flex min-h-screen snap-start flex-col border-b-4 border-[var(--ink)] px-5 py-6 sm:px-10 lg:px-16">
+        <header className="flex items-center justify-between border-b-4 border-[var(--ink)] pb-4">
+          <Link href="/" className="flex items-center gap-2 text-lg font-black uppercase tracking-tight" aria-label="BlindProcure home">
+            <ShieldCheck aria-hidden size={22} strokeWidth={2.5} /> BlindProcure
           </Link>
-          <nav aria-label="Primary" className="flex items-center gap-2">
+          <nav aria-label="Primary" className="flex items-center gap-3">
             <Link
-              className="hidden rounded-md px-3 py-1.5 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--panel-strong)] hover:text-[var(--foreground)] sm:inline"
+              className="hidden border-2 border-[var(--ink)] px-4 py-2 text-sm font-bold uppercase tracking-widest transition hover:-translate-y-0.5 sm:inline-block"
               href="/app/tenders"
             >
               Tenders
             </Link>
             <Link
-              className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--accent-strong)]"
+              className="border-2 border-[var(--ink)] bg-[var(--acid)] px-5 py-2 text-sm font-bold uppercase tracking-widest transition hover:-translate-y-0.5"
               href="/app"
             >
               Open app
             </Link>
           </nav>
-        </div>
-      </header>
-
-      <main className="flex-1">
-        {/* Hero */}
-        <section className="mx-auto grid w-full max-w-7xl gap-12 px-4 pb-20 pt-14 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-8">
-          <div className="max-w-3xl">
-            <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--panel)] px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--accent-strong)]">
-              <Lock aria-hidden size={13} /> Zama FHEVM · Sepolia
-            </p>
-            <h1 className="text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-              Procurement without public bid leakage.
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted)]">
-              BlindProcure runs sealed-bid tenders onchain. Suppliers encrypt prices in the browser,
-              the smart contract selects the lowest valid offer using fully homomorphic encryption,
-              and only the winning result is ever revealed.
-            </p>
-            <div className="mt-9 flex flex-wrap items-center gap-3">
-              <Link
-                className="inline-flex items-center gap-2 rounded-md bg-[var(--accent)] px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-[var(--accent-strong)]"
-                href="/app"
-              >
-                Launch workspace <ArrowRight aria-hidden size={18} />
-              </Link>
-              <Link
-                className="inline-flex items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--panel)] px-6 py-3 text-base font-semibold transition hover:border-[var(--line-strong)] hover:bg-white"
-                href="/app/tenders/new"
-              >
-                Create tender
-              </Link>
-            </div>
-            <dl className="mt-10 grid gap-6 border-t border-[var(--line)] pt-8 sm:grid-cols-3">
-              {[
-                ["Private price discovery", "Competitors never see losing prices - not during bidding, not after award."],
-                ["Auditable award path", "Anyone can verify tender state, bid count, winner identity, and the decryption proof."],
-                ["Selective disclosure", "Buyers and approved auditors decrypt only the winning price. Nothing else."],
-              ].map(([title, body]) => (
-                <div key={title}>
-                  <dt className="text-sm font-semibold">{title}</dt>
-                  <dd className="mt-1.5 text-sm leading-6 text-[var(--muted)]">{body}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-
-          {/* Product mock */}
-          <div aria-hidden className="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-3 shadow-sm">
-            <div className="overflow-hidden rounded-lg border border-[var(--line)] bg-white">
-              <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] bg-[var(--panel)] px-4 py-3">
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-semibold">Office laptops Q3</div>
-                  <div className="text-xs text-[var(--muted)]">Tender #1 · Sealed supplier selection</div>
-                </div>
-                <span className="shrink-0 rounded-full bg-[var(--ok-soft)] px-2.5 py-1 text-xs font-semibold text-[var(--accent-strong)]">
-                  Finalized
-                </span>
-              </div>
-              <div className="grid gap-4 p-4">
-                <div className="grid grid-cols-3 gap-2.5">
-                  <Metric label="Budget cap" value="1,500" />
-                  <Metric label="Bids" value="3 encrypted" />
-                  <Metric label="Winner" value="Bid #2" />
-                </div>
-                <div className="grid gap-2">
-                  {[
-                    ["Bid #1", "0x8579...E09c", false],
-                    ["Bid #2", "0x479D...BA49", true],
-                    ["Bid #3", "0x64E1...B7bB", false],
-                  ].map(([bid, supplier, selected]) => (
-                    <div
-                      key={bid as string}
-                      className={`grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-md border px-3 py-2.5 ${
-                        selected ? "border-[var(--ok-line)] bg-[var(--ok-soft)]" : "border-[var(--line)] bg-[var(--panel)]"
-                      }`}
-                    >
-                      <span className="mono text-xs font-medium">{bid}</span>
-                      <span className="mono truncate text-xs text-[var(--muted)]">{supplier as string}</span>
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-strong)]">
-                        {selected ? <CheckCircle2 size={13} /> : <Lock size={13} />}
-                        {selected ? "Selected" : "Encrypted"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="grid gap-1.5 rounded-md border border-[var(--line)] bg-[var(--panel)] p-3.5">
-                  <div className="flex items-center gap-2 text-sm font-semibold">
-                    <ScanSearch size={15} className="text-[var(--accent)]" /> Audit view
-                  </div>
-                  <p className="text-sm leading-6 text-[var(--muted)]">
-                    The public sees the winning supplier and a proof-backed result. Authorized
-                    auditors decrypt only the winning price.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Workflow */}
-        <section aria-labelledby="how-it-works" className="border-t border-[var(--line)] bg-[var(--panel)]">
-          <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-            <h2 id="how-it-works" className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              How a sealed tender runs
-            </h2>
-            <p className="mt-2 max-w-2xl text-[var(--muted)]">
-              Four steps, every one verifiable onchain. No trusted intermediary sees a single price.
-            </p>
-            <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {workflow.map((step, index) => (
-                <li key={step.title} className="rounded-lg border border-[var(--line)] bg-white p-5">
-                  <div className="flex items-center justify-between">
-                    <span className="grid h-10 w-10 place-items-center rounded-md bg-[var(--accent-soft)] text-[var(--accent-strong)]">
-                      {step.icon}
-                    </span>
-                    <span className="mono text-xs font-semibold text-[var(--muted)]">0{index + 1}</span>
-                  </div>
-                  <h3 className="mt-4 text-sm font-semibold">{step.title}</h3>
-                  <p className="mt-1.5 text-sm leading-6 text-[var(--muted)]">{step.body}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        {/* Privacy model */}
-        <section aria-labelledby="privacy-model" className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <h2 id="privacy-model" className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            A precise privacy model
-          </h2>
-          <p className="mt-2 max-w-2xl text-[var(--muted)]">
-            Everything is either public, permanently private, or gated by onchain access control. There is no gray area.
-          </p>
-          <div className="mt-8 grid gap-4 lg:grid-cols-3">
-            {privacyModel.map((column) => (
-              <div key={column.title} className="rounded-lg border border-[var(--line)] bg-[var(--panel)] p-5">
-                <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-[var(--accent-strong)]">
-                  {column.icon} {column.title}
-                </h3>
-                <ul className="mt-4 grid gap-2.5">
-                  {column.items.map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-sm leading-6 text-[var(--ink)]">
-                      <Check aria-hidden size={14} className="mt-1.5 shrink-0 text-[var(--accent)]" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+        </header>
+        <div className="flex flex-1 flex-col justify-center py-8">
+          <div className="mb-8 flex flex-wrap gap-3">
+            {["Zama FHEVM", "Sepolia", "Sealed-bid"].map((tag) => (
+              <span key={tag} className="inline-block border-2 border-[var(--ink)] px-3 py-1 text-xs font-bold uppercase tracking-[0.2em]">
+                {tag}
+              </span>
             ))}
           </div>
-        </section>
-
-        {/* CTA */}
-        <section className="border-t border-[var(--line)] bg-[var(--ink)] text-white">
-          <div className="mx-auto flex w-full max-w-7xl flex-col items-start gap-6 px-4 py-14 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Run your first sealed tender in minutes.</h2>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-white/70">
-                Sign in with email or Google. Transactions are sponsored - no wallet setup, no gas
-                tokens, no seed phrases.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                className="inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 text-base font-semibold text-[var(--ink)] transition hover:bg-white/90"
-                href="/app"
-              >
-                Launch workspace <ArrowRight aria-hidden size={18} />
-              </Link>
-              <Link
-                className="inline-flex items-center gap-2 rounded-md border border-white/25 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/10"
-                href="/app/tenders/new"
-              >
-                Create a tender
-              </Link>
-            </div>
+          <h1 className="text-[15vw] font-black uppercase leading-[0.85] tracking-tighter sm:text-[11vw]">
+            Bids are
+            <br />
+            <span className="inline-block bg-[var(--ink)] px-3 text-[var(--acid)]">nobody&apos;s</span>
+            <br />
+            business.
+          </h1>
+          <p className="mt-8 max-w-xl text-lg font-medium leading-7">
+            Procurement without public bid leakage. Sealed-bid tenders on Ethereum: the smart
+            contract picks the cheapest valid offer without ever seeing a single price.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            <Link
+              className="inline-flex items-center gap-3 border-4 border-[var(--ink)] bg-[var(--ink)] px-8 py-4 text-base font-black uppercase tracking-tight text-[var(--acid)] transition hover:-translate-y-1"
+              href="/app"
+            >
+              Launch workspace <ArrowRight aria-hidden size={20} strokeWidth={2.5} />
+            </Link>
+            <Link
+              className="inline-flex items-center gap-2 border-4 border-[var(--ink)] px-8 py-4 text-base font-black uppercase tracking-tight transition hover:-translate-y-1"
+              href="/app/tenders/new"
+            >
+              Create tender
+            </Link>
           </div>
-        </section>
-      </main>
-
-      <footer className="border-t border-[var(--line)]">
-        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-4 text-xs text-[var(--muted)] sm:px-6 lg:px-8">
-          <span>BlindProcure · Sealed-bid procurement on Sepolia</span>
-          <span className="inline-flex items-center gap-1.5">
-            <Lock aria-hidden size={12} /> Bid prices encrypted with Zama FHE
-          </span>
         </div>
-      </footer>
+        <div className="flex items-center justify-between border-t-4 border-[var(--ink)] pt-4 text-sm font-bold uppercase tracking-widest">
+          <span className="flex items-center gap-2">
+            <ArrowDown aria-hidden size={18} strokeWidth={2.5} className="animate-bounce" /> Scroll
+          </span>
+          <span aria-hidden>01 / 05</span>
+        </div>
+      </section>
+
+      {/* 02 Problem */}
+      <section aria-labelledby="problem-heading" className="flex min-h-screen snap-start flex-col justify-center border-b-4 border-[var(--ink)] bg-[var(--ink)] px-5 py-16 text-[var(--background)] sm:px-10 lg:px-16">
+        <div className="mb-10 flex items-center justify-between">
+          <span className="inline-block border-2 border-[var(--background)] px-3 py-1 text-xs font-bold uppercase tracking-[0.2em]">
+            The problem
+          </span>
+          <span aria-hidden className="text-sm font-bold uppercase tracking-widest text-[var(--danger)]">02 / 05</span>
+        </div>
+        <h2 id="problem-heading" className="max-w-6xl text-[8vw] font-black uppercase leading-[0.9] tracking-tighter sm:text-[6vw]">
+          The chain proves everything.
+          <br />
+          <span className="text-[var(--danger)]">It also shows everything.</span>
+        </h2>
+        <div className="mt-12 grid gap-8 border-t-2 border-[var(--background)]/30 pt-8 md:grid-cols-3">
+          {[
+            ["Verifiable", "Nobody can forge, backdate, or edit the award trail. That part blockchain nailed."],
+            ["Transparent", "Every bid posted in plaintext is broadcast to every competitor. Forever."],
+            ["Unusable", "So real procurement stayed offchain - the secrets were worth more than the proof."],
+          ].map(([title, body]) => (
+            <div key={title}>
+              <h3 className="text-2xl font-black uppercase">{title}</h3>
+              <p className="mt-3 font-medium leading-6 text-[var(--background)]/70">{body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 03 Solution */}
+      <section aria-labelledby="solution-heading" className="flex min-h-screen snap-start flex-col justify-center border-b-4 border-[var(--ink)] bg-[var(--acid)] px-5 py-16 sm:px-10 lg:px-16">
+        <div className="mb-10 flex items-center justify-between">
+          <span className="inline-block border-2 border-[var(--ink)] px-3 py-1 text-xs font-bold uppercase tracking-[0.2em]">
+            The fix
+          </span>
+          <span aria-hidden className="text-sm font-bold uppercase tracking-widest">03 / 05</span>
+        </div>
+        <h2 id="solution-heading" className="max-w-6xl text-[8vw] font-black uppercase leading-[0.9] tracking-tighter sm:text-[6vw]">
+          FHE = math that computes
+          <br />
+          on <span className="inline-block bg-[var(--ink)] px-3 text-[var(--acid)]">sealed</span> data.
+        </h2>
+        <div className="mt-12 grid border-4 border-[var(--ink)] md:grid-cols-2">
+          <div className="border-b-4 border-[var(--ink)] p-8 md:border-b-0 md:border-r-4">
+            <h3 className="text-xl font-black uppercase">Before FHE</h3>
+            <p className="mt-3 text-lg font-medium leading-7">
+              Choose one: a verifiable public ledger <em>or</em> confidential prices. Never both.
+            </p>
+          </div>
+          <div className="bg-[var(--ink)] p-8 text-[var(--background)]">
+            <h3 className="text-xl font-black uppercase text-[var(--acid)]">With FHE</h3>
+            <p className="mt-3 text-lg font-medium leading-7">
+              The contract runs min() over encrypted bids. Execution stays verifiable. Inputs stay
+              sealed. The trade-off is dead.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 04 Protocol */}
+      <section aria-labelledby="protocol-heading" className="flex min-h-screen snap-start flex-col justify-center border-b-4 border-[var(--ink)] px-5 py-16 sm:px-10 lg:px-16">
+        <div className="mb-10 flex items-center justify-between">
+          <span className="inline-block border-2 border-[var(--ink)] px-3 py-1 text-xs font-bold uppercase tracking-[0.2em]">
+            Protocol
+          </span>
+          <span aria-hidden className="text-sm font-bold uppercase tracking-widest">04 / 05</span>
+        </div>
+        <h2 id="protocol-heading" className="sr-only">
+          How a sealed tender runs
+        </h2>
+        <ol className="grid border-4 border-[var(--ink)] md:grid-cols-2 lg:grid-cols-4">
+          {[
+            ["1", "Publish", "Buyer posts the tender: spec hash, budget cap, deadline. Public. Binding."],
+            ["2", "Seal", "Approved suppliers encrypt prices in the browser. Ciphertext only, gas sponsored."],
+            ["3", "Select", "The contract compares sealed bids. Lowest valid price wins."],
+            ["4", "Prove", "Winner goes public with a decryption proof. Losing prices: sealed forever."],
+          ].map(([n, title, body], i) => (
+            <li
+              key={n}
+              className={`flex min-h-64 flex-col justify-between border-b-4 border-[var(--ink)] p-6 last:border-b-0 md:border-b-0 ${i < 3 ? "md:border-r-4" : ""}`}
+            >
+              <span aria-hidden className={`text-7xl font-black ${i === 3 ? "text-[var(--danger)]" : ""}`}>{n}</span>
+              <div>
+                <h3 className="text-2xl font-black uppercase">{title}</h3>
+                <p className="mt-2 font-medium leading-6">{body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <p className="mt-8 flex items-center gap-3 text-lg font-bold uppercase tracking-tight">
+          <Lock aria-hidden size={20} strokeWidth={2.5} /> Losing bids are not hidden. They are mathematically unreadable.
+        </p>
+      </section>
+
+      {/* 05 CTA */}
+      <section aria-labelledby="cta-heading" className="flex min-h-screen snap-start flex-col bg-[var(--ink)] px-5 py-16 text-[var(--background)] sm:px-10 lg:px-16">
+        <div className="flex flex-1 flex-col justify-center">
+          <h2 id="cta-heading" className="text-[12vw] font-black uppercase leading-[0.85] tracking-tighter sm:text-[9vw]">
+            Seal your
+            <br />
+            <span className="text-[var(--acid)]">first tender.</span>
+          </h2>
+          <div className="mt-12 flex flex-wrap items-center gap-6">
+            <Link
+              className="inline-flex items-center gap-3 border-4 border-[var(--acid)] bg-[var(--acid)] px-10 py-5 text-xl font-black uppercase tracking-tight text-[var(--ink)] transition hover:-translate-y-1"
+              href="/app"
+            >
+              Launch workspace <ArrowRight aria-hidden size={22} strokeWidth={2.5} />
+            </Link>
+            <span className="text-sm font-bold uppercase tracking-widest text-[var(--background)]/60">
+              Email sign-in · zero gas · zero setup
+            </span>
+          </div>
+        </div>
+        <footer className="flex flex-wrap items-center justify-between gap-2 border-t-2 border-[var(--background)]/30 pt-4 text-xs font-bold uppercase tracking-widest text-[var(--background)]/60">
+          <span>BlindProcure — sealed with Zama FHE</span>
+          <span className="inline-flex items-center gap-1.5">
+            <Lock aria-hidden size={12} /> Sepolia
+          </span>
+        </footer>
+      </section>
     </div>
   );
 }
@@ -701,17 +624,17 @@ export function TendersPage() {
       <section className="py-8">
         <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="mono text-xs uppercase tracking-wide text-[var(--muted)]">Sepolia workspace</p>
-            <h1 className="mt-1.5 text-3xl font-semibold tracking-tight">Tenders</h1>
-            <p className="mt-2 max-w-2xl leading-7 text-[var(--muted)]">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--muted)]">Sepolia workspace</p>
+            <h1 className="mt-1.5 text-4xl font-black uppercase tracking-tighter sm:text-5xl">Tenders</h1>
+            <p className="mt-2 max-w-2xl font-medium leading-7 text-[var(--muted)]">
               Create a sealed tender, approve suppliers, and finalize the encrypted winner selection.
             </p>
           </div>
           <Link
-            className="inline-flex shrink-0 items-center gap-2 rounded-md bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--accent-strong)]"
+            className="inline-flex shrink-0 items-center gap-2 border-2 border-[var(--ink)] bg-[var(--acid)] px-4 py-2.5 text-sm font-bold uppercase tracking-widest text-[var(--ink)] transition hover:-translate-y-0.5"
             href="/app/tenders/new"
           >
-            <Plus aria-hidden size={16} /> New tender
+            <Plus aria-hidden size={16} strokeWidth={2.5} /> New tender
           </Link>
         </div>
         {!isContractConfigured && (
@@ -730,7 +653,7 @@ export function TendersPage() {
             {!authenticated && (
               <Notice>
                 <button
-                  className="font-semibold text-[var(--accent)] underline underline-offset-2"
+                  className="font-bold uppercase tracking-wide text-[var(--ink)] underline underline-offset-4"
                   onClick={() => login({ loginMethods: ["email", "google"] })}
                 >
                   Sign in
@@ -749,7 +672,7 @@ export function TendersPage() {
             {isLoadingTenders ? (
               <div className="grid gap-3" aria-live="polite" aria-busy="true">
                 {[0, 1, 2].map((index) => (
-                  <div key={index} className="h-24 animate-pulse rounded-lg border border-[var(--line)] bg-[var(--panel)]" />
+                  <div key={index} className="h-24 animate-pulse border-2 border-[var(--ink)]/20 bg-[var(--panel-strong)]" />
                 ))}
                 <span className="sr-only">Loading tenders...</span>
               </div>
@@ -804,23 +727,23 @@ function TenderSection({
 }) {
   return (
     <section className="grid gap-3" aria-label={title}>
-      <div className="flex items-center gap-2.5 border-b border-[var(--line)] pb-2.5">
-        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
-        <span className="rounded-full bg-[var(--panel-strong)] px-2.5 py-0.5 text-xs font-semibold text-[var(--muted)]">
+      <div className="flex items-center gap-2.5 border-b-2 border-[var(--ink)] pb-2.5">
+        <h2 className="text-lg font-black uppercase tracking-tight">{title}</h2>
+        <span className="border-2 border-[var(--ink)] px-2 py-0 text-xs font-bold text-[var(--ink)]">
           {rows.length}
         </span>
       </div>
       {rows.length === 0 ? (
-        <div className="grid place-items-center gap-3 rounded-lg border border-dashed border-[var(--line-strong)] bg-[var(--panel)] px-6 py-10 text-center">
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-[var(--panel-strong)] text-[var(--muted)]">
-            <FileText aria-hidden size={20} />
+        <div className="grid place-items-center gap-3 border-2 border-dashed border-[var(--ink)] px-6 py-10 text-center">
+          <span className="grid h-11 w-11 place-items-center border-2 border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)]">
+            <FileText aria-hidden size={20} strokeWidth={2.5} />
           </span>
-          <p className="max-w-md text-sm leading-6 text-[var(--muted)]">{emptyText}</p>
+          <p className="max-w-md text-sm font-medium leading-6 text-[var(--muted)]">{emptyText}</p>
           <Link
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent)] underline-offset-2 hover:underline"
+            className="inline-flex items-center gap-1.5 text-sm font-bold uppercase tracking-widest text-[var(--ink)] underline underline-offset-4"
             href="/app/tenders/new"
           >
-            <Plus aria-hidden size={14} /> Create a tender
+            <Plus aria-hidden size={14} strokeWidth={2.5} /> Create a tender
           </Link>
         </div>
       ) : (
@@ -853,17 +776,17 @@ function TenderListCard({
 
   return (
     <Link
-      className="group grid gap-4 rounded-lg border border-[var(--line)] bg-[var(--panel)] p-4 transition hover:border-[var(--accent)] hover:shadow-sm sm:grid-cols-[1fr_auto] sm:items-center sm:p-5"
+      className="group grid gap-4 border-2 border-[var(--ink)] bg-[var(--background)] p-4 transition hover:-translate-y-0.5 hover:shadow-[6px_6px_0_0_var(--ink)] sm:grid-cols-[1fr_auto] sm:items-center sm:p-5"
       href={`/app/tenders/${tenderId}`}
     >
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="mono text-xs text-[var(--muted)]">#{tenderId.toString()}</span>
+          <span className="mono text-xs font-bold text-[var(--muted)]">#{tenderId.toString()}</span>
           <StatusBadge label={status.label} tone={status.tone} />
           {isMine && <StatusBadge label="Created by me" tone="info" />}
         </div>
-        <div className="mt-1.5 truncate text-lg font-semibold tracking-tight">{tender[1]}</div>
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[var(--muted)]">
+        <div className="mt-1.5 truncate text-xl font-black uppercase tracking-tight">{tender[1]}</div>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium text-[var(--muted)]">
           <span className="inline-flex items-center gap-1.5">
             <Banknote aria-hidden size={14} /> Budget cap {tender[4].toString()}
           </span>
@@ -875,8 +798,8 @@ function TenderListCard({
           </span>
         </div>
       </div>
-      <span className="hidden items-center gap-1.5 text-sm font-semibold text-[var(--accent)] transition group-hover:gap-2.5 sm:inline-flex">
-        View <ArrowRight aria-hidden size={16} />
+      <span className="hidden items-center gap-1.5 text-sm font-bold uppercase tracking-widest text-[var(--ink)] transition group-hover:gap-2.5 sm:inline-flex">
+        View <ArrowRight aria-hidden size={16} strokeWidth={2.5} />
       </span>
     </Link>
   );
@@ -949,19 +872,19 @@ export function CreateTenderPage() {
   return (
     <Shell>
       <section className="mx-auto w-full max-w-3xl py-8">
-        <nav aria-label="Breadcrumb" className="mb-4 text-sm text-[var(--muted)]">
-          <Link className="font-medium underline-offset-2 hover:underline" href="/app">
+        <nav aria-label="Breadcrumb" className="mb-4 text-sm font-bold uppercase tracking-widest text-[var(--muted)]">
+          <Link className="underline underline-offset-4 hover:text-[var(--ink)]" href="/app">
             Tenders
           </Link>
           <span aria-hidden className="mx-2">/</span>
-          <span className="text-[var(--foreground)]">New tender</span>
+          <span className="text-[var(--ink)]">New tender</span>
         </nav>
-        <h1 className="text-3xl font-semibold tracking-tight">Create tender</h1>
-        <p className="mt-2 leading-7 text-[var(--muted)]">
+        <h1 className="text-4xl font-black uppercase tracking-tighter sm:text-5xl">Create tender</h1>
+        <p className="mt-2 font-medium leading-7 text-[var(--muted)]">
           Everything on this form is public onchain: title, spec hash, budget cap, and deadline.
           Supplier bid prices are encrypted and never revealed.
         </p>
-        <div className="mt-6 grid gap-4 rounded-lg border border-[var(--line)] bg-[var(--panel)] p-5 sm:p-6">
+        <div className="mt-6 grid gap-4 border-2 border-[var(--ink)] bg-[var(--background)] p-5 sm:p-6">
           {!isContractConfigured && (
             <Notice tone="error">
               Set <code className="mono">NEXT_PUBLIC_BLINDPROCURE_ADDRESS</code> before creating tenders.
@@ -970,7 +893,7 @@ export function CreateTenderPage() {
           {!authenticated && (
             <Notice>
               <button
-                className="font-semibold text-[var(--accent)] underline underline-offset-2"
+                className="font-bold uppercase tracking-wide text-[var(--ink)] underline underline-offset-4"
                 onClick={() => login({ loginMethods: ["email", "google"] })}
               >
                 Sign in
@@ -985,50 +908,50 @@ export function CreateTenderPage() {
               </span>
             </Notice>
           )}
-          <label className="grid gap-1.5 text-sm font-medium" htmlFor="tender-title">
+          <label className="grid gap-1.5 text-sm font-bold uppercase tracking-wide" htmlFor="tender-title">
             Tender title
             <input
               id="tender-title"
-              className="rounded-md border border-[var(--line)] bg-white px-3.5 py-2.5"
+              className="border-2 border-[var(--ink)] bg-white px-3.5 py-2.5"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
             />
-            <span className="text-xs font-normal text-[var(--muted)]">Public. Shown to every viewer.</span>
+            <span className="text-xs font-medium normal-case tracking-normal text-[var(--muted)]">Public. Shown to every viewer.</span>
           </label>
-          <label className="grid gap-1.5 text-sm font-medium" htmlFor="tender-spec">
+          <label className="grid gap-1.5 text-sm font-bold uppercase tracking-wide" htmlFor="tender-spec">
             Specification
             <textarea
               id="tender-spec"
-              className="min-h-28 rounded-md border border-[var(--line)] bg-white px-3.5 py-2.5"
+              className="min-h-28 border-2 border-[var(--ink)] bg-white px-3.5 py-2.5"
               value={spec}
               onChange={(event) => setSpec(event.target.value)}
             />
-            <span className="text-xs font-normal text-[var(--muted)]">
+            <span className="text-xs font-medium normal-case tracking-normal text-[var(--muted)]">
               Only a keccak256 hash of this text goes onchain, so suppliers can verify the spec they were sent.
             </span>
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-1.5 text-sm font-medium" htmlFor="tender-budget">
+            <label className="grid gap-1.5 text-sm font-bold uppercase tracking-wide" htmlFor="tender-budget">
               Budget cap
               <input
                 id="tender-budget"
-                className="rounded-md border border-[var(--line)] bg-white px-3.5 py-2.5"
+                className="border-2 border-[var(--ink)] bg-white px-3.5 py-2.5"
                 inputMode="numeric"
                 value={budget}
                 onChange={(event) => setBudget(event.target.value.replace(/\D/g, ""))}
               />
-              <span className="text-xs font-normal text-[var(--muted)]">Bids above this cap are rejected by the contract.</span>
+              <span className="text-xs font-medium normal-case tracking-normal text-[var(--muted)]">Bids above this cap are rejected by the contract.</span>
             </label>
-            <label className="grid gap-1.5 text-sm font-medium" htmlFor="tender-minutes">
+            <label className="grid gap-1.5 text-sm font-bold uppercase tracking-wide" htmlFor="tender-minutes">
               Bidding window (minutes)
               <input
                 id="tender-minutes"
-                className="rounded-md border border-[var(--line)] bg-white px-3.5 py-2.5"
+                className="border-2 border-[var(--ink)] bg-white px-3.5 py-2.5"
                 inputMode="numeric"
                 value={minutes}
                 onChange={(event) => setMinutes(event.target.value.replace(/\D/g, ""))}
               />
-              <span className="text-xs font-normal text-[var(--muted)]">Bidding closes automatically after this window.</span>
+              <span className="text-xs font-medium normal-case tracking-normal text-[var(--muted)]">Bidding closes automatically after this window.</span>
             </label>
           </div>
           <div className="mt-1 grid gap-3">
@@ -1043,8 +966,8 @@ export function CreateTenderPage() {
             <TxToast status={status} />
           </div>
         </div>
-        <div className="mt-4 flex items-start gap-2.5 rounded-md border border-[var(--line)] bg-[var(--panel)] px-3.5 py-3 text-sm leading-6 text-[var(--muted)]">
-          <Lock aria-hidden size={14} className="mt-1 shrink-0 text-[var(--accent)]" />
+        <div className="mt-4 flex items-start gap-2.5 border-2 border-[var(--ink)] bg-[var(--panel-strong)] px-3.5 py-3 text-sm font-medium leading-6 text-[var(--muted)]">
+          <Lock aria-hidden size={14} strokeWidth={2.5} className="mt-1 shrink-0 text-[var(--ink)]" />
           <span>
             After creation you will approve suppliers by email or wallet address. Approved suppliers
             encrypt their prices locally before submitting - no plaintext price ever reaches the chain.
@@ -1379,50 +1302,50 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
         )}
         {isLoadingTender && (
           <div className="grid gap-4" aria-live="polite" aria-busy="true">
-            <div className="h-52 animate-pulse rounded-lg border border-[var(--line)] bg-[var(--panel)]" />
+            <div className="h-52 animate-pulse border-2 border-[var(--ink)]/20 bg-[var(--panel-strong)]" />
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
-              <div className="h-64 animate-pulse rounded-lg border border-[var(--line)] bg-[var(--panel)]" />
-              <div className="h-64 animate-pulse rounded-lg border border-[var(--line)] bg-[var(--panel)]" />
+              <div className="h-64 animate-pulse border-2 border-[var(--ink)]/20 bg-[var(--panel-strong)]" />
+              <div className="h-64 animate-pulse border-2 border-[var(--ink)]/20 bg-[var(--panel-strong)]" />
             </div>
             <span className="sr-only">Loading tender state...</span>
           </div>
         )}
         {!isLoadingTender && !tenderExists && (
-          <div className="grid place-items-center gap-3 rounded-lg border border-dashed border-[var(--line-strong)] bg-[var(--panel)] px-6 py-14 text-center">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-[var(--panel-strong)] text-[var(--muted)]">
+          <div className="grid place-items-center gap-3 border-2 border-dashed border-[var(--ink)] px-6 py-14 text-center">
+            <span className="grid h-11 w-11 place-items-center border-2 border-[var(--ink)] bg-[var(--danger-soft)] text-[var(--danger)]">
               <CircleAlert aria-hidden size={20} />
             </span>
-            <p className="text-base font-semibold">Tender #{tenderId.toString()} was not found.</p>
+            <p className="text-lg font-black uppercase tracking-tight">Tender #{tenderId.toString()} was not found.</p>
             <p className="max-w-md text-sm leading-6 text-[var(--muted)]">
               It may not exist yet on Sepolia, or the ID is wrong.
             </p>
-            <Link className="text-sm font-semibold text-[var(--accent)] underline-offset-2 hover:underline" href="/app">
+            <Link className="text-sm font-bold uppercase tracking-widest text-[var(--ink)] underline underline-offset-4" href="/app">
               Back to all tenders
             </Link>
           </div>
         )}
         {tenderExists && tender && (
           <div className="grid gap-5">
-            <nav aria-label="Breadcrumb" className="text-sm text-[var(--muted)]">
-              <Link className="font-medium underline-offset-2 hover:underline" href="/app">
+            <nav aria-label="Breadcrumb" className="text-sm font-bold uppercase tracking-widest text-[var(--muted)]">
+              <Link className="underline underline-offset-4 hover:text-[var(--ink)]" href="/app">
                 Tenders
               </Link>
               <span aria-hidden className="mx-2">/</span>
-              <span className="text-[var(--foreground)]">Tender #{tenderId.toString()}</span>
+              <span className="text-[var(--ink)]">Tender #{tenderId.toString()}</span>
             </nav>
 
-            <section className="overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--panel)]">
+            <section className="border-2 border-[var(--ink)] bg-[var(--background)]">
               <div className="p-5 sm:p-6">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="mono rounded-md border border-[var(--line)] bg-white px-2 py-1 text-xs font-medium text-[var(--muted)]">
+                      <span className="mono border-2 border-[var(--ink)] bg-white px-2 py-1 text-xs font-bold text-[var(--ink)]">
                         Tender #{tenderId.toString()}
                       </span>
                       <StatusBadge {...tenderStatus(tender, nowMs)} />
                       {authenticated && <StatusBadge label={myRoleLabel} tone={isBuyer ? "ok" : "info"} />}
                     </div>
-                    <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight">{tender[1]}</h1>
+                    <h1 className="mt-3 text-3xl font-black uppercase leading-tight tracking-tighter sm:text-4xl">{tender[1]}</h1>
                     <div className="mt-4 grid gap-2">
                       <AddressLine label="Buyer" address={tender[0]} />
                       <AddressLine label="Spec hash" address={tender[2]} />
@@ -1430,7 +1353,7 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                   </div>
                   <div className="flex shrink-0 flex-wrap gap-2">
                     <a
-                      className="inline-flex items-center gap-1.5 rounded-md border border-[var(--line)] bg-white px-3 py-2 text-sm font-semibold transition hover:border-[var(--line-strong)] hover:bg-[var(--panel-strong)]"
+                      className="inline-flex items-center gap-1.5 border-2 border-[var(--ink)] bg-white px-3 py-2 text-sm font-bold uppercase tracking-wide transition hover:-translate-y-0.5"
                       href={`${sepoliaExplorerBaseUrl}/address/${blindProcureAddress}`}
                       target="_blank"
                       rel="noreferrer"
@@ -1452,7 +1375,7 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                 </div>
               </div>
 
-              <div className="border-t border-[var(--line)] bg-white/50 px-5 py-4 sm:px-6">
+              <div className="border-t-2 border-[var(--ink)] bg-[var(--panel-strong)] px-5 py-4 sm:px-6">
                 <h2 className="sr-only">Tender progress</h2>
                 <ol className="grid gap-2 sm:grid-cols-5">
                   {stageItems.map((item, index) => {
@@ -1461,12 +1384,12 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                       <li
                         key={item.label}
                         aria-current={isCurrent ? "step" : undefined}
-                        className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-semibold ${
+                        className={`flex items-center gap-2 border-2 px-3 py-2 text-sm font-bold uppercase tracking-wide ${
                           item.done
-                            ? "border-[var(--ok-line)] bg-[var(--ok-soft)] text-[var(--accent-strong)]"
+                            ? "border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)]"
                             : isCurrent
-                              ? "border-[var(--line-strong)] bg-white text-[var(--ink)]"
-                              : "border-[var(--line)] bg-transparent text-[var(--muted)]"
+                              ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--background)]"
+                              : "border-[var(--ink)]/30 bg-transparent text-[var(--muted)]"
                         }`}
                       >
                         {item.done ? (
@@ -1474,7 +1397,7 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                         ) : (
                           <span
                             aria-hidden
-                            className="grid h-[17px] w-[17px] shrink-0 place-items-center rounded-full border border-current text-[10px]"
+                            className="grid h-[17px] w-[17px] shrink-0 place-items-center border border-current text-[10px] font-bold"
                           >
                             {index + 1}
                           </span>
@@ -1500,9 +1423,9 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                         Only the buyer address can approve suppliers, finalize the tender, or grant auditor access.
                       </Notice>
                     )}
-                    <div className="grid gap-3 rounded-md border border-[var(--line)] bg-white/60 p-4">
-                      <div className="flex items-center gap-2 text-sm font-semibold">
-                        <Mail aria-hidden size={14} className="text-[var(--accent)]" /> Approve supplier by email
+                    <div className="grid gap-3 border-2 border-[var(--ink)] bg-white p-4">
+                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wide">
+                        <Mail aria-hidden size={14} strokeWidth={2.5} className="text-[var(--ink)]" /> Approve supplier by email
                       </div>
                       <p className="text-xs leading-5 text-[var(--muted)]">
                         The email resolves to the supplier&apos;s smart account via Privy. Approvals lock once the
@@ -1515,7 +1438,7 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                         <input
                           id="supplier-email"
                           type="email"
-                          className="rounded-md border border-[var(--line)] bg-white px-3.5 py-2.5 text-sm"
+                          className="border-2 border-[var(--ink)] bg-white px-3.5 py-2.5 text-sm"
                           placeholder="supplier@company.com"
                           value={supplierEmailInput}
                           onChange={(event) => setSupplierEmailInput(event.target.value)}
@@ -1536,9 +1459,9 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                         <Notice tone="error">Enter a valid supplier email address.</Notice>
                       )}
                     </div>
-                    <div className="grid gap-3 rounded-md border border-[var(--line)] bg-white/60 p-4">
-                      <div className="flex items-center gap-2 text-sm font-semibold">
-                        <Wallet aria-hidden size={14} className="text-[var(--accent)]" /> Approve supplier by wallet address
+                    <div className="grid gap-3 border-2 border-[var(--ink)] bg-white p-4">
+                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wide">
+                        <Wallet aria-hidden size={14} strokeWidth={2.5} className="text-[var(--ink)]" /> Approve supplier by wallet address
                       </div>
                       <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
                         <label className="sr-only" htmlFor="supplier-address">
@@ -1546,7 +1469,7 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                         </label>
                         <input
                           id="supplier-address"
-                          className="mono rounded-md border border-[var(--line)] bg-white px-3.5 py-2.5 text-sm"
+                          className="mono border-2 border-[var(--ink)] bg-white px-3.5 py-2.5 text-sm"
                           placeholder="0x..."
                           value={supplierInput}
                           onChange={(event) => setSupplierInput(event.target.value)}
@@ -1562,9 +1485,9 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                         <Notice tone="error">Enter a valid 0x supplier address.</Notice>
                       )}
                     </div>
-                    <div className="grid gap-3 rounded-md border border-[var(--line)] bg-white/60 p-4">
-                      <div className="flex items-center gap-2 text-sm font-semibold">
-                        <Gavel aria-hidden size={14} className="text-[var(--accent)]" /> Finalize selection
+                    <div className="grid gap-3 border-2 border-[var(--ink)] bg-white p-4">
+                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wide">
+                        <Gavel aria-hidden size={14} strokeWidth={2.5} className="text-[var(--ink)]" /> Finalize selection
                       </div>
                       <p className="text-xs leading-5 text-[var(--muted)]">
                         {tender[7]
@@ -1586,7 +1509,7 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                   subtitle="Bidder identities are public. Every price stays encrypted onchain."
                 >
                   {submittedSuppliers.length === 0 ? (
-                    <div className="grid place-items-center gap-2 rounded-md border border-dashed border-[var(--line-strong)] bg-white/50 px-5 py-8 text-center">
+                    <div className="grid place-items-center gap-2 border-2 border-dashed border-[var(--ink)] px-5 py-8 text-center">
                       <Hourglass aria-hidden size={18} className="text-[var(--muted)]" />
                       <p className="text-sm leading-6 text-[var(--muted)]">
                         No supplier has submitted an encrypted bid yet.
@@ -1594,10 +1517,10 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                       </p>
                     </div>
                   ) : (
-                    <div className="overflow-hidden rounded-md border border-[var(--line)] bg-white">
+                    <div className="overflow-hidden border-2 border-[var(--ink)] bg-white">
                       <table className="w-full border-collapse text-sm">
                         <thead>
-                          <tr className="border-b border-[var(--line)] bg-[var(--panel-strong)] text-left text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                          <tr className="border-b-2 border-[var(--ink)] bg-[var(--panel-strong)] text-left text-xs font-bold uppercase tracking-[0.15em] text-[var(--ink)]">
                             <th className="w-16 px-3.5 py-2.5 font-semibold" scope="col">
                               Bid
                             </th>
@@ -1611,13 +1534,13 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                         </thead>
                         <tbody>
                           {submittedSuppliers.map((row) => (
-                            <tr key={row.bidId} className="border-b border-[var(--line)] last:border-b-0">
+                            <tr key={row.bidId} className="border-b border-[var(--ink)]/20 last:border-b-0">
                               <td className="mono px-3.5 py-3 text-xs font-medium">#{row.bidId}</td>
                               <td className="mono min-w-0 break-all px-3.5 py-3 text-xs text-[var(--muted)]">
                                 {row.supplier}
                               </td>
                               <td className="px-3.5 py-3">
-                                <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-xs font-semibold text-[var(--accent-strong)]">
+                                <span className="inline-flex items-center gap-1.5 border-2 border-[var(--ink)] bg-[var(--panel-strong)] px-2.5 py-0.5 text-xs font-bold uppercase text-[var(--ink)]">
                                   <Lock aria-hidden size={11} /> Encrypted
                                 </span>
                               </td>
@@ -1640,10 +1563,10 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                         Public winning supplier
                       </div>
                       <div
-                        className={`mono flex min-h-11 items-center break-all rounded-md border px-3.5 py-2.5 text-sm font-semibold ${
+                        className={`mono flex min-h-11 items-center break-all border-2 px-3.5 py-2.5 text-sm font-semibold ${
                           winnerRecorded && winner && winner !== zeroAddress
-                            ? "border-[var(--ok-line)] bg-[var(--ok-soft)] text-[var(--accent-strong)]"
-                            : "border-[var(--line)] bg-white text-[var(--muted)]"
+                            ? "border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)]"
+                            : "border-[var(--ink)] bg-white text-[var(--muted)]"
                         }`}
                       >
                         {winnerRecorded && winner && winner !== zeroAddress ? winner : "Not recorded yet"}
@@ -1686,18 +1609,18 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                     ) : (
                       <Notice>Sign in with an approved supplier account to bid.</Notice>
                     )}
-                    <label className="grid gap-1.5 text-sm font-medium" htmlFor="bid-price">
+                    <label className="grid gap-1.5 text-sm font-bold uppercase tracking-wide" htmlFor="bid-price">
                       Bid price
                       <input
                         id="bid-price"
-                        className="rounded-md border border-[var(--line)] bg-white px-3.5 py-2.5 text-sm"
+                        className="border-2 border-[var(--ink)] bg-white px-3.5 py-2.5 text-sm"
                         inputMode="numeric"
                         placeholder="980"
                         value={bidPrice}
                         onChange={(event) => setBidPrice(event.target.value.replace(/\D/g, ""))}
                         disabled={Boolean(currentUserBid.data) || tender[7] || isClosed}
                       />
-                      <span className="text-xs font-normal leading-5 text-[var(--muted)]">
+                      <span className="text-xs font-medium normal-case tracking-normal leading-5 text-[var(--muted)]">
                         Must be at or below the budget cap of {tender[4].toString()}.
                       </span>
                     </label>
@@ -1732,11 +1655,11 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                         <KeyRound aria-hidden size={16} /> Decrypt winning price
                       </ActionButton>
                       {decryptedPrice ? (
-                        <div className="rounded-md border border-[var(--ok-line)] bg-[var(--ok-soft)] px-3.5 py-3">
-                          <div className="text-xs font-semibold uppercase tracking-wide text-[var(--accent-strong)]">
+                        <div className="border-2 border-[var(--ink)] bg-[var(--acid)] px-3.5 py-3">
+                          <div className="text-xs font-bold uppercase tracking-wide text-[var(--ink)]">
                             Winning price (visible only to you)
                           </div>
-                          <div className="mono mt-1 text-xl font-semibold text-[var(--accent-strong)]">{decryptedPrice}</div>
+                          <div className="mono mt-1 text-2xl font-black text-[var(--ink)]">{decryptedPrice}</div>
                         </div>
                       ) : (
                         <p className="text-xs leading-5 text-[var(--muted)]">
@@ -1746,9 +1669,9 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                         </p>
                       )}
                     </div>
-                    <div className="grid gap-2.5 border-t border-[var(--line)] pt-4">
-                      <div className="flex items-center gap-2 text-sm font-semibold">
-                        <ScanSearch aria-hidden size={14} className="text-[var(--accent)]" /> Grant auditor access
+                    <div className="grid gap-2.5 border-t-2 border-[var(--ink)] pt-4">
+                      <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wide">
+                        <ScanSearch aria-hidden size={14} strokeWidth={2.5} className="text-[var(--ink)]" /> Grant auditor access
                       </div>
                       <p className="text-xs leading-5 text-[var(--muted)]">
                         Buyers can let an auditor decrypt the winning price without making it public.
@@ -1758,7 +1681,7 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
                       </label>
                       <input
                         id="auditor-address"
-                        className="mono rounded-md border border-[var(--line)] bg-white px-3.5 py-2.5 text-sm"
+                        className="mono border-2 border-[var(--ink)] bg-white px-3.5 py-2.5 text-sm"
                         placeholder="0x..."
                         value={auditorInput}
                         onChange={(event) => setAuditorInput(event.target.value)}
@@ -1789,9 +1712,9 @@ export function TenderDetailPage({ tenderId }: { tenderId: bigint }) {
 
 function Metric({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-md border border-[var(--line)] bg-white/70 px-3.5 py-3">
-      <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">{label}</div>
-      <div className="mt-1 truncate text-base font-semibold tracking-tight" title={hint || value}>
+    <div className="border-2 border-[var(--ink)] bg-[var(--background)] px-3.5 py-3">
+      <div className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--muted)]">{label}</div>
+      <div className="mt-1 truncate text-lg font-black tracking-tight" title={hint || value}>
         {value}
       </div>
     </div>
@@ -1801,15 +1724,15 @@ function Metric({ label, value, hint }: { label: string; value: string; hint?: s
 function StatusBadge({ label, tone }: { label: string; tone: "ok" | "warn" | "info" | "accent" }) {
   const toneClass =
     tone === "ok"
-      ? "border-[var(--ok-line)] bg-[var(--ok-soft)] text-[var(--accent-strong)]"
+      ? "border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)]"
       : tone === "warn"
-        ? "border-[var(--warn-line)] bg-[var(--warn-soft)] text-[var(--warn)]"
+        ? "border-[var(--ink)] bg-[var(--warn-soft)] text-[var(--ink)]"
         : tone === "accent"
-          ? "border-[var(--ok-line)] bg-white text-[var(--accent-strong)]"
-          : "border-[var(--line)] bg-white text-[var(--muted)]";
+          ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--acid)]"
+          : "border-[var(--ink)] bg-[var(--background)] text-[var(--ink)]";
 
   return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${toneClass}`}>
+    <span className={`inline-flex items-center border-2 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide ${toneClass}`}>
       {label}
     </span>
   );
@@ -1818,7 +1741,7 @@ function StatusBadge({ label, tone }: { label: string; tone: "ok" | "warn" | "in
 function AddressLine({ label, address }: { label: string; address: string }) {
   return (
     <div className="grid gap-0.5 sm:grid-cols-[96px_1fr] sm:gap-2">
-      <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)] sm:pt-0.5">{label}</span>
+      <span className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--muted)] sm:pt-0.5">{label}</span>
       <span className="mono min-w-0 break-all text-xs leading-5 text-[var(--ink)]">{address}</span>
     </div>
   );
@@ -1836,14 +1759,14 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--panel)]">
-      <div className="flex items-start gap-3 border-b border-[var(--line)] bg-white/50 px-5 py-4">
-        <span aria-hidden className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-md bg-[var(--accent-soft)] text-[var(--accent-strong)]">
+    <section className="border-2 border-[var(--ink)] bg-[var(--background)]">
+      <div className="flex items-start gap-3 border-b-2 border-[var(--ink)] px-5 py-4">
+        <span aria-hidden className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center border-2 border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)]">
           {icon}
         </span>
         <div className="min-w-0">
-          <h2 className="text-base font-semibold tracking-tight text-[var(--ink)]">{title}</h2>
-          {subtitle && <p className="mt-0.5 text-sm leading-6 text-[var(--muted)]">{subtitle}</p>}
+          <h2 className="text-base font-black uppercase tracking-tight text-[var(--ink)]">{title}</h2>
+          {subtitle && <p className="mt-0.5 text-sm font-medium leading-6 text-[var(--muted)]">{subtitle}</p>}
         </div>
       </div>
       <div className="p-5">{children}</div>

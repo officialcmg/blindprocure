@@ -59,18 +59,18 @@ export default function EncryptBidPage() {
   }, []);
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[#f5f2ea] px-6 text-[#1b1813]">
-      <section className="w-full max-w-md rounded-lg border border-[#ddd3bf] bg-white p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[#115e59]">BlindProcure</p>
-        <h1 className="mt-2 text-xl font-semibold tracking-tight">Local bid encryption</h1>
-        <p className="mt-3 flex items-center gap-2.5 text-sm leading-6 text-[#6c675c]" role="status" aria-live="polite">
+    <main className="grid min-h-screen place-items-center bg-[#f2f2ee] px-6 text-[#111111]">
+      <section className="w-full max-w-md border-2 border-[#111111] bg-white p-6 shadow-[6px_6px_0_0_#111111]">
+        <p className="text-xs font-bold uppercase tracking-[0.2em]">BlindProcure</p>
+        <h1 className="mt-2 text-xl font-black uppercase tracking-tight">Local bid encryption</h1>
+        <p className="mt-3 flex items-center gap-2.5 text-sm font-medium leading-6 text-[#55554f]" role="status" aria-live="polite">
           <span
             aria-hidden
-            className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-[#ddd3bf] border-t-[#0f766e]"
+            className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-[#11111133] border-t-[#111111]"
           />
           {status}
         </p>
-        <p className="mt-4 border-t border-[#ddd3bf] pt-3 text-xs leading-5 text-[#6c675c]">
+        <p className="mt-4 border-t-2 border-[#111111] pt-3 text-xs font-medium leading-5 text-[#55554f]">
           This window encrypts your bid price on your device using Zama FHE, then closes itself. Your
           plaintext price never leaves this browser.
         </p>

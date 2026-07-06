@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Archivo, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 
-const geist = Geist({
+const archivo = Archivo({
   subsets: ["latin"],
-  variable: "--font-geist",
+  variable: "--font-archivo",
 });
 
 const geistMono = Geist_Mono({
@@ -28,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`h-full ${geist.variable} ${geistMono.variable}`}>
+    <html lang="en" className={`h-full ${archivo.variable} ${geistMono.variable}`}>
       <body className="min-h-full antialiased">
         <Providers>{children}</Providers>
       </body>
