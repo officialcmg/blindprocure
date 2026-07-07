@@ -1,12 +1,18 @@
 # BlindProcure
 
-BlindProcure is a confidential sealed-bid procurement app built on Zama's FHEVM.
+**Verifiable onchain procurement without price leakage.**
 
-Problem statement:
+BlindProcure is a confidential sealed-bid tender app built on Zama FHEVM. It lets buyers publish procurement rules onchain, lets approved suppliers submit encrypted prices, and lets the contract select the lowest valid offer without exposing supplier pricing to competitors.
 
-> A smart contract should be able to choose the cheapest compliant supplier without exposing the losing bids.
+Public blockchains make procurement awards independently checkable, but normal public execution leaks every bid the moment it is submitted. That is unacceptable for real procurement: suppliers need their pricing strategy protected, and buyers still need the award to be auditable.
 
-Buyers create public tenders. Suppliers submit encrypted bid prices. The contract compares encrypted bids, selects the lowest valid price under the public budget cap, publicly records only the winning supplier, and lets only the buyer or an approved auditor decrypt the winning price.
+BlindProcure resolves that trade-off with Fully Homomorphic Encryption (FHE). Suppliers encrypt prices in the browser. The smart contract compares ciphertexts, enforces the public budget cap, and records the winning supplier through proof-backed public decryption. Losing prices remain encrypted, and the winning price is decryptable only by the buyer or an approved auditor.
+
+The result is a procurement workflow with public rules, verifiable awards, and confidential supplier pricing.
+
+- **Live app:** https://blindprocure.xyz
+- **Repository:** https://github.com/officialcmg/blindprocure
+- **Network:** Ethereum Sepolia testnet
 
 ## Contents
 
@@ -110,7 +116,7 @@ Current deployed contract:
 
 - BlindProcure: `0x81C6Eb008787999112D2dD58dB3cbAdE4848F9c5`
 - Network: Sepolia
-- Hosted app: `https://blindprocure.vercel.app`
+- Hosted app: `https://blindprocure.xyz`
 
 Create a local `.env` from `.env.example` and fill values locally. Do not commit `.env`.
 
